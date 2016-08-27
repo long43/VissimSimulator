@@ -32,12 +32,23 @@ namespace VissimSimulator
 
     public class VehicleEvent
     {
-
+        public int Vehicleid { get; set; }
+        public int VehicleLink { get; set; }
+        public Dictionary<Guid, VISSIMSimulator.Event> Events = new Dictionary<Guid, VISSIMSimulator.Event>();
+        public void addEvent(VISSIMSimulator.Event events){
+            Events.Add(events.guid, events);
+        }
+        public void removeEvent(VISSIMSimulator.Event events)
+        {
+            Events.Remove(events.guid);
+        }
     }
 
     public class CellularTowerEvent
     {
-
+        public int LocationId { set; get; }
+        public int CellularTowerId { set; get; }
+        public VISSIMSimulator.Event Event;
     }
 
 
