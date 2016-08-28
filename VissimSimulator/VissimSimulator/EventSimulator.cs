@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace VissimSimulator
+namespace VISSIMSimulator
 {
     public class EventSimulator
     {
@@ -34,11 +34,11 @@ namespace VissimSimulator
     {
         public int Vehicleid { get; set; }
         public int VehicleLink { get; set; }
-        public Dictionary<Guid, VISSIMSimulator.Event> Events = new Dictionary<Guid, VISSIMSimulator.Event>();
-        public void addEvent(VISSIMSimulator.Event events){
+        public Dictionary<Guid, Event> Events = new Dictionary<Guid,Event>();
+        public void addEvent(Event events){
             Events.Add(events.guid, events);
         }
-        public void removeEvent(VISSIMSimulator.Event events)
+        public void removeEvent(Event events)
         {
             Events.Remove(events.guid);
         }
@@ -48,7 +48,7 @@ namespace VissimSimulator
     {
         public int LocationId { set; get; }
         public int CellularTowerId { set; get; }
-        public VISSIMSimulator.Event Event;
+        public Event event;
     }
 
 

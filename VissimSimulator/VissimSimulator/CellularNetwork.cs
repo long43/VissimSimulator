@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace VissimSimulator
+namespace VISSIMSimulator
 {
     public class CellTower
     {

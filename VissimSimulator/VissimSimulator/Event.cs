@@ -69,8 +69,4 @@ namespace VISSIMSimulator
         public long EndTick { get; set; }
     }
 }
-    public class Test
-{
-
-}
 

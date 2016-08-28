@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VissimSimulator
+namespace VISSIMSimulator
 {
     public class Program
     {
