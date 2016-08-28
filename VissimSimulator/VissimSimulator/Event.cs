@@ -68,5 +68,8 @@ namespace VISSIMSimulator
 
         public long EndTick { get; set; }
     }
+   public calss test
+{
+}
 }
 
