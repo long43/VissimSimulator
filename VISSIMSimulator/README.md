@@ -1,1 +1,2 @@
-# VissimSimulator
+# VISSIMSimulator
+Framework of the VISSIMSimulator
