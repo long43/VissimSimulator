@@ -3,37 +3,34 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using VISSIMLIB;
+using System.IO;
+//using VISSIMLIB;
 
 namespace VissimSimulator
 {
     public class EventSimulator
     {
-        public Dictionary<int, Location> CellularNetwork = new Dictionary<int,Location>();
+#region private fields
+        private const string CellLinkRelationFilePath = @".\Input\Taicang_Major_Cell_Link_Related.csv";
+        private const string CellLocationRelationFilePath  = @".\Input\Taicang_Major_Cells.csv";
+        private const char Delimiter = ',';
 
-        public Dictionary<int, VehicleEvent> VehicleEvents = new Dictionary<int,VehicleEvent>();
+        private CellularNetwork cellularNetwork = new CellularNetwork();
+        private Dictionary<string, VehicleEvent> VehicleEvents = new Dictionary<string, VehicleEvent>();
+        private ConcurrentQueue<CellularTowerEvent> CellularTowerEvents = new ConcurrentQueue<CellularTowerEvent>();
+        private List<CollectorWorker> CollectorWorkers;
+#endregion //end private fields
 
-        public ConcurrentQueue<CellularTowerEvent> CellularTowerEvents = new ConcurrentQueue<CellularTowerEvent>();
-
-        public List<CollectorWorker> CollectorWorkers;
-
+#region public methods
         public void Run()
         {
-            Vissim vissim = new Vissim();
+            //Vissim vissim = new Vissim();
             ///Load Vissim net work
-            VissimSimulator.LoadNet(@"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Examples Demo\Urban Intersection Beijing.CN\Intersection Beijing.inpx");
+            //VissimSimulator.LoadNet(@"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Examples Demo\Urban Intersection Beijing.CN\Intersection Beijing.inpx");
             ///Read table contains Cellular tower information and correspoing link information
-            var cellTowerInformation = new StreamReader(File.OpenRead(@"C:\test.csv"));
-            CellularTowerEvent cte = new CellularTowerEvent();
-            while (!cellTowerInformation.EndOfStream)
-            {
-                var line = cellTowerInformation.ReadLine();
-                var values = line.Split(';');
 
-                cte.CellularTowerId = CellTower.AddLink(Int32.Parse(values[0]));
-                cte.LocationId = Location.AddCellTower(Int32.Parse(values[1]));
-            }
             ///Generate the random event, when vehicle passing a fixed location and the Timespan is satisfied.
+            CellularTowerEvent cte = new CellularTowerEvent();
             foreach (IVehicle vehicle in vissim.Net.Vehicles)
             {
                 ///Select Random Vehicle
@@ -54,52 +51,87 @@ namespace VissimSimulator
                 {
                     collect.ProcessEvent(cte);
                 }
-            ///Make the program check the all vehicle in Vissim network every 1 sec.
-            for (int i = 0; i < simulationTime; i++)
-            {
-                vissim.Simulation.RunSingleStep();
-                foreach (CollectorWorker worker in CollectorWorkers)
+                ///Make the program check the all vehicle in Vissim network every 1 sec.
+                for (int i = 0; i < simulationTime; i++)
                 {
-                    Task workerTask = Task.Run(() =>
+                    vissim.Simulation.RunSingleStep();
+                    foreach (CollectorWorker worker in CollectorWorkers)
                     {
-                        worker.ProcessEvent(CellularTowerEvents);
-                    });
+                        Task workerTask = Task.Run(() =>
+                        {
+                            worker.ProcessEvent(CellularTowerEvents);
+                        });
 
-                    workerTask.Wait();
+                        workerTask.Wait();
+                    }
                 }
             }
         }
+
         public void Exit()
         {
-            vissim.Exit();
+            //vissim.Exit();
         }
+
+#endregion //end public methods
+
+
+#region private methods
+
+        /// <summary>
+        /// Read the csv files to initialize the cellular network
+        /// The format of the CellLinkRelation file is as follows:
+        /// LINK_ID,CELLID,LAC
+        /// the format of the CellLocationRelation file is as follows:
+        /// LAC,CELLID
+        /// </summary>
+        private void LoadCellularNetwork()
+        {
+            //read the cell-location relation file
+            using (StreamReader cellLinkReader = new StreamReader(File.OpenRead(CellLinkRelationFilePath)))
+            {
+                //skip the header line
+                string line = cellLinkReader.ReadLine();
+
+                //read the rest of the file
+                while ((line = cellLinkReader.ReadLine()) != null)
+                {
+                    string[] values = line.Split(Delimiter);
+
+                    string locationId = values[2];
+                    Location location;
+
+                    if (!cellularNetwork.ContainsLocation(locationId))
+                    {
+                        location = new Location(locationId);
+                        location.CellTowers.Add()
+                    }
+                    
+                }
+            }
+
+            //read the cell-link relation file
+            using (StreamReader cellLinkReader = new StreamReader(File.OpenRead(CellLinkRelationFilePath)))
+            {
+                //skip the header line
+                string line = cellLinkReader.ReadLine();
+
+                //read the rest of the file
+                while ((line = cellLinkReader.ReadLine()) != null)
+                {
+                    string[] values = line.Split(Delimiter);
+
+                    CellularNetwork.
+                }
+            }
+        }
+
+#endregion 
+    
+    
     }
 
    
-
-    public class VehicleEvent
-    {
-        public int Vehicleid { get; set; }
-        public int VehicleLink { get; set; }
-        public Dictionary<Guid, Event> Events = new Dictionary<Guid, Event>();
-        public void addEvent(Event events){
-            Events.Add(events.guid, events);
-        }
-        public void removeEvent(Event events)
-        {
-            Events.Remove(events.guid);
-        }
-    }
-
-    public class CellularTowerEvent
-    {
-        public int LocationId { set; get; }
-        public int CellularTowerId { set; get; }
-        public Event Event;
-    }
-
-
-
     public class CollectorWorker
     {
         public void ProcessEvent(ConcurrentQueue<CellularTowerEvent> cellularTowerEvents)

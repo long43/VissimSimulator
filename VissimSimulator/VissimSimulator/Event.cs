@@ -90,6 +90,27 @@ namespace VissimSimulator
 
         public long EndTick { get; set; }
     }
+
+    public class VehicleEvent
+    {
+        public int Vehicleid { get; set; }
+        public int VehicleLink { get; set; }
+        public Dictionary<Guid, Event> Events = new Dictionary<Guid, Event>();
+        public void addEvent(Event events){
+            Events.Add(events.guid, events);
+        }
+        public void removeEvent(Event events)
+        {
+            Events.Remove(events.guid);
+        }
+    }
+
+    public class CellularTowerEvent
+    {
+        public int LocationId { set; get; }
+        public int CellularTowerId { set; get; }
+        public Event Event;
+    }
 }
 
 
