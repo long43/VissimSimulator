@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.IO;
 
 namespace VissimSimulator
 {
@@ -21,6 +22,55 @@ namespace VissimSimulator
             network = new Dictionary<string, Location>();
         }
 
+
+        /// <summary>
+        /// Read the csv files to initialize the cellular network
+        /// The format of the CellLinkRelation file is as follows:
+        /// LINK_ID,CELLID,LAC
+        /// </summary>
+        private void LoadFromFile(string networkFilePath)
+        {
+            //read the cell-location relation file
+            using (StreamReader cellLinkReader = new StreamReader(File.OpenRead(networkFilePath)))
+            {
+                //skip the header line
+                string line = cellLinkReader.ReadLine();
+
+                //read the rest of the file
+                while ((line = cellLinkReader.ReadLine()) != null)
+                {
+                    string[] values = line.Split(delimiter);
+
+                    string locationId = values[2];
+                    Location location;
+
+                    if (!this.ContainsLocation(locationId))
+                    {
+                        location = new Location(locationId);
+                        //if the Location is new location, then the cell must be new cell
+                        CellTower cell = new CellTower();
+                        cell.CellTowerId = values[1];
+                        //if the cell is a new cell, then the link must be a new link
+                        cell.Links.Add(values[3]);
+
+                        location.AddCellTower(cell);
+                    }
+                    else
+                    { 
+                        //if this location pre exists
+                        location = this.GetLocation(locationId);
+                        //check if the cell also exists
+
+                    }
+                    
+                }
+            }
+        }
+
+        public Location GetLocation(string locationId)
+        {
+            return network[locationId];
+        }
 
         public void AddLocation(Location location)
         {
