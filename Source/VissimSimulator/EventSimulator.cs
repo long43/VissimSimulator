@@ -78,53 +78,7 @@ namespace VissimSimulator
 
 #region private methods
 
-        /// <summary>
-        /// Read the csv files to initialize the cellular network
-        /// The format of the CellLinkRelation file is as follows:
-        /// LINK_ID,CELLID,LAC
-        /// the format of the CellLocationRelation file is as follows:
-        /// LAC,CELLID
-        /// </summary>
-        private void LoadCellularNetwork()
-        {
-            //read the cell-location relation file
-            using (StreamReader cellLinkReader = new StreamReader(File.OpenRead(CellLinkRelationFilePath)))
-            {
-                //skip the header line
-                string line = cellLinkReader.ReadLine();
-
-                //read the rest of the file
-                while ((line = cellLinkReader.ReadLine()) != null)
-                {
-                    string[] values = line.Split(Delimiter);
-
-                    string locationId = values[2];
-                    Location location;
-
-                    if (!cellularNetwork.ContainsLocation(locationId))
-                    {
-                        location = new Location(locationId);
-                        location.CellTowers.Add()
-                    }
-                    
-                }
-            }
-
-            //read the cell-link relation file
-            using (StreamReader cellLinkReader = new StreamReader(File.OpenRead(CellLinkRelationFilePath)))
-            {
-                //skip the header line
-                string line = cellLinkReader.ReadLine();
-
-                //read the rest of the file
-                while ((line = cellLinkReader.ReadLine()) != null)
-                {
-                    string[] values = line.Split(Delimiter);
-
-                    CellularNetwork.
-                }
-            }
-        }
+ 
 
 #endregion 
     
