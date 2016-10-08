@@ -41,11 +41,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CellTower.cs" />
+    <Compile Include="CellularTowerEvent.cs" />
     <Compile Include="CellularNetwork.cs" />
+    <Compile Include="CollectorWorker.cs" />
     <Compile Include="Event.cs" />
     <Compile Include="EventSimulator.cs" />
+    <Compile Include="Location.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VehicleEvent.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
