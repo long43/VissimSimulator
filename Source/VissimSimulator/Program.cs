@@ -1,6 +1,5 @@
 ﻿using System;
 using VISSIMLIB;
-using System.IO;
 namespace VissimSimulator
 {
     public class Program

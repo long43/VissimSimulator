@@ -130,6 +130,6 @@ namespace VissimSimulator
                 VehicleEvents.Add(vEvent.Vehicleid, vEvent);
             }
         }
-
+        #endregion private methods
     }
 }
