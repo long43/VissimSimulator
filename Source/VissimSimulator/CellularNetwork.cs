@@ -28,7 +28,7 @@ namespace VissimSimulator
         /// The format of the CellLinkRelation file is as follows:
         /// LINK_ID,CELLID,LAC
         /// </summary>
-        private void LoadFromFile(string networkFilePath)
+        public void LoadFromFile(string networkFilePath, char delimiter)
         {
             //read the cell-location relation file
             using (StreamReader cellLinkReader = new StreamReader(File.OpenRead(networkFilePath)))
@@ -42,6 +42,8 @@ namespace VissimSimulator
                     string[] values = line.Split(delimiter);
 
                     string locationId = values[2];
+                    string cellId = values[1];
+                    string linkId = values[0];
                     Location location;
 
                     if (!this.ContainsLocation(locationId))
@@ -49,9 +51,9 @@ namespace VissimSimulator
                         location = new Location(locationId);
                         //if the Location is new location, then the cell must be new cell
                         CellTower cell = new CellTower();
-                        cell.CellTowerId = values[1];
+                        cell.CellTowerId = cellId;
                         //if the cell is a new cell, then the link must be a new link
-                        cell.Links.Add(values[3]);
+                        cell.Links.Add(linkId);
 
                         location.AddCellTower(cell);
                     }
@@ -60,9 +62,25 @@ namespace VissimSimulator
                         //if this location pre exists
                         location = this.GetLocation(locationId);
                         //check if the cell also exists
+                        if (location.ContainsCell(cellId))
+                        {
+                            //if cell exists
+                            CellTower cell = location.GetCell(cellId);
 
+                            //check if link exists, most likely it doesn't exist otherwise the file is corrupted
+                            if (cell.Links.Contains(linkId))
+                            {
+                                throw new Exception("the link is already exists");
+                            }
+
+                            cell.AddLink(linkId);
+                        }
+                        else //if cell doesn't pre exist
+                        {
+                            CellTower cell = new CellTower(cellId);
+                            cell.AddLink(linkId);
+                        }
                     }
-                    
                 }
             }
         }
@@ -112,7 +130,7 @@ namespace VissimSimulator
                    select location).FirstOrDefault();
         }
 
-        public CellTower FindCellIdByLinkId(string linkId)
+        public CellTower FindCellTowerByLinkId(string linkId)
         { 
             return (from location in network.Values
                     from cell in location.Cells
@@ -125,54 +143,6 @@ namespace VissimSimulator
             return (from location in network.Values
                     where location.ContainsCell(cellId)
                     select location).FirstOrDefault();
-        }
-    }
-
-    public class CellTower
-    {
-        public string CellTowerId { get; set; }
-
-        public HashSet<string> Links { get; private set; }
-
-        public CellTower()
-        {
-            Links = new HashSet<string>();
-        }
-
-        public void AddLink(string linkId)
-        {
-            Links.Add(linkId);
-        }
-    }
-
-    public class Location
-    {
-        private Dictionary<string, CellTower> cellTowers;
-
-        public string LocationId { get; set; }
-
-        public ICollection<CellTower> Cells 
-        {
-            get
-            {
-                return cellTowers.Values;
-            }
-        }
-
-        public Location(string locationId)
-        {
-            LocationId = locationId;
-            cellTowers = new Dictionary<string, CellTower>();
-        }
-
-        public bool ContainsCell(string cellId)
-        {
-            return cellTowers.ContainsKey(cellId);
-        }
-
-        public void AddCellTower(CellTower tower)
-        {
-            cellTowers.Add(tower.CellTowerId, tower);
         }
     }
 }

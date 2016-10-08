@@ -4,103 +4,132 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
+using VS = VissimSimulator;
 //using VISSIMLIB;
 
 namespace VissimSimulator
 {
     public class EventSimulator
     {
-#region private fields
+        #region private fields
         private const string CellLinkRelationFilePath = @".\Input\Taicang_Major_Cell_Link_Related.csv";
-        private const string CellLocationRelationFilePath  = @".\Input\Taicang_Major_Cells.csv";
         private const char Delimiter = ',';
+        private const long SimulationTicks = 3600;
 
         private CellularNetwork cellularNetwork = new CellularNetwork();
         private Dictionary<string, VehicleEvent> VehicleEvents = new Dictionary<string, VehicleEvent>();
-        private ConcurrentQueue<CellularTowerEvent> CellularTowerEvents = new ConcurrentQueue<CellularTowerEvent>();
+        private BlockingCollection<CellularTowerEvent> CellularTowerEvents = new BlockingCollection<CellularTowerEvent>();
         private List<CollectorWorker> CollectorWorkers;
-#endregion //end private fields
+        #endregion //end private fields
 
-#region public methods
+        #region public methods
         public void Run()
         {
-            //Vissim vissim = new Vissim();
+            Vissim vissim = new Vissim();
             ///Load Vissim net work
-            //VissimSimulator.LoadNet(@"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Examples Demo\Urban Intersection Beijing.CN\Intersection Beijing.inpx");
-            ///Read table contains Cellular tower information and correspoing link information
+            vissim.LoadNet(@"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Examples Demo\Urban Intersection Beijing.CN\Intersection Beijing.inpx");
 
-            ///Generate the random event, when vehicle passing a fixed location and the Timespan is satisfied.
-            CellularTowerEvent cte = new CellularTowerEvent();
-            foreach (IVehicle vehicle in vissim.Net.Vehicles)
+            //initialize the cellular network
+            cellularNetwork.LoadFromFile(CellLinkRelationFilePath, Delimiter);
+            //set up the collector threads. For now, only need one thread on this
+
+            Task collector = Task.Factory.StartNew(() =>
             {
-                ///Select Random Vehicle
-                int vehiclePossible = rnd.Next(0, 10);
-                //Only Selected Vehicle can generate the Event.
-                if (vehiclePossible == 0)
+                CollectorWorker worker = new CollectorWorker();
+                foreach (CellularTowerEvent cEvent in CellularTowerEvents.GetConsumingEnumerable())
                 {
-                    Event evet = new Event();
-                    ///Create random event type.
-                    int i = rnd.Next(0, 1);
-                    evet.TimeSpan = EventFactory.CreateTimeSpan();
-                    evet.EventType = EventFactory.CreateEventType;
-                    cte.Event = evet;
+                    worker.Process(cEvent);
                 }
-                ///record the event information 
-                CollectorWorker collect = new CollectorWorker();
-                if (vehicle.Location == cte.CellTowerId & cte.Event.TimeSpan == simulationTime)
-                {
-                    collect.ProcessEvent(cte);
-                }
-                ///Make the program check the all vehicle in Vissim network every 1 sec.
-                for (int i = 0; i < simulationTime; i++)
-                {
-                    vissim.Simulation.RunSingleStep();
-                    foreach (CollectorWorker worker in CollectorWorkers)
-                    {
-                        Task workerTask = Task.Run(() =>
-                        {
-                            worker.ProcessEvent(CellularTowerEvents);
-                        });
+            });
 
-                        workerTask.Wait();
+            //simulation thread: including vissim simulation, events generation and detection
+            Task simulator = Task.Factory.StartNew(() =>
+            {
+                for (int currentTick = 0; currentTick < SimulationTicks; currentTick++)
+                {
+                    foreach (IVehicle vehicle in vissim.Net.Vehicles)
+                    {
+                        //get the vehicle id
+                        string vehicleId = vehicle.Id;
+
+                        //first check if this vehicle has event
+                        if (VehicleEvents.ContainsKey(vehicleId))
+                        {
+                            CellularTowerEvent cEvent = DetectEvent(vehicleId, currentTick);
+                            CellularTowerEvents.Add(cEvent);
+                        }
+                        else //if no vehicle event, that means this is new vehicle entering the vissim network
+                        {
+                            GenerateEvent(currentTick);
+                        }
                     }
                 }
-            }
+            });
         }
+
 
         public void Exit()
         {
             //vissim.Exit();
         }
 
-#endregion //end public methods
+        #endregion //end public methods
 
-
-#region private methods
-
- 
-
-#endregion 
-    
-    
-    }
-
-   
-    public class CollectorWorker
-    {
-        public void ProcessEvent(ConcurrentQueue<CellularTowerEvent> cellularTowerEvents)
+        #region private methods
+        private CellularTowerEvent DetectEvent(string vehicleId, long currentTick)
         {
-            CellularTowerEvent evt = null;
-            if (cellularTowerEvents.TryDequeue(out evt))
+            VehicleEvent vEvent = VehicleEvents[vehicleId];
+
+            //find out the active event on this vehicle
+            Event evt = vEvent.GetActiveEvent(currentTick);
+            //check if the event is happenning
+            if (evt != null)
             {
-                process(evt);
+                //if the event is happening, see if any cellTower/Location capture it
+                string linkId = vEvent.VehicleLink;
+                CellularTowerEvent cEvent = null;
+                switch (evt.EventType)
+                {
+                    case EventType.PowerOn: //this is a LU event
+                        Location location = cellularNetwork.FindLocationByLinkId(linkId);
+                        cEvent = new CellularTowerEvent(location.LocationId, evt);
+                        break;
+                    case EventType.OnCall: //this is a hand-off event
+                        CellTower cell = cellularNetwork.FindCellTowerByLinkId(linkId);
+                        cEvent = new CellularTowerEvent(cell.CellTowerId, evt);
+                        break;
+                    default:
+                        break;
+                }
+                return cEvent;
+            }
+            return null;
+        }
+
+        private void GenerateEvent(int currentTick)
+        {
+            Random rnd = new Random();
+            //get a random number
+            int vehiclePossible = rnd.Next(0, 10);
+
+            //let's say 80% of vehicles will have PowerOn event
+            if (vehiclePossible <= 8)
+            {
+                //no vehicle event on this vehicle yet. Means this is a new vehicle in the vissim network
+                VehicleEvent vEvent = new VehicleEvent();
+                vEvent.AddPowerOnEvent();
+
+                int nextPossibleOnCall = rnd.Next(0, 10);
+
+                //let's say 10% of vehicles will have OnCall event
+                if (nextPossibleOnCall < 1)
+                {
+                    vEvent.AddOnCallEvent(currentTick);
+                }
+
+                VehicleEvents.Add(vEvent.Vehicleid, vEvent);
             }
         }
 
-        private void process(CellularTowerEvent evt)
-        {
-
-
-        }
     }
 }

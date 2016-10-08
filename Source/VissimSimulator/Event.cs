@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Collections.Generic;
 using VS = VissimSimulator;
 
 /// <summary>
@@ -6,45 +8,6 @@ using VS = VissimSimulator;
 /// </summary>
 namespace VissimSimulator
 {
-    public static class EventFactory
-    {
-        ///Decide which EventType and Event TimeSpan.
-        public static EventType CreateEventType(int i)
-        {
-            if (i == 0)
-            {
-                return EventType.OnCall;
-            }
-
-            if (i != 0)
-            {
-                return EventType.PowerOn;
-            }
-
-
-        }
-        public static VS.TimeSpan CreateTimeSpan(EventType)
-        {
-            if (EventType == OnCall)
-            {
-                return new VS.TimeSpan
-                {
-                    StartTick = 0,
-                    EndTick = 3600
-                };
-            }
-            if (EventType == OnCall)
-            {
-                return new VS.TimeSpan
-                {
-                    StartTick = 0,
-                    EndTick = 1
-                };
-            }
-        }
-    }
-}
-
     public class Event
     {
         public EventType EventType { get; set; }
@@ -53,11 +16,11 @@ namespace VissimSimulator
 
         public VS.TimeSpan TimeSpan { get; set; }
 
-        public Event() 
+        public Event(EventType type)
         {
-            EventType = EventFactory.CreateEventType();
+            EventType = type;
 
-            TimeSpan = EventFactory.CreateTimeSpan();
+            TimeSpan = new VS.TimeSpan(0, 3600);
         }
 
         public Event(EventType type, TimeSpan timeSpan)
@@ -67,7 +30,7 @@ namespace VissimSimulator
             TimeSpan = TimeSpan;
         }
 
-        public bool IsActive(long currentTick) 
+        public bool IsActive(long currentTick)
         {
             if (TimeSpan.StartTick <= currentTick && TimeSpan.EndTick >= currentTick)
             {
@@ -89,27 +52,12 @@ namespace VissimSimulator
         public long StartTick { get; set; }
 
         public long EndTick { get; set; }
-    }
 
-    public class VehicleEvent
-    {
-        public int Vehicleid { get; set; }
-        public int VehicleLink { get; set; }
-        public Dictionary<Guid, Event> Events = new Dictionary<Guid, Event>();
-        public void addEvent(Event events){
-            Events.Add(events.guid, events);
-        }
-        public void removeEvent(Event events)
+        public TimeSpan(long start, long end)
         {
-            Events.Remove(events.guid);
+            StartTick = start;
+            EndTick = end;
         }
-    }
-
-    public class CellularTowerEvent
-    {
-        public int LocationId { set; get; }
-        public int CellularTowerId { set; get; }
-        public Event Event;
     }
 }
 
