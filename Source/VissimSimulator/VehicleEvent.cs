@@ -7,43 +7,76 @@ namespace VissimSimulator
 {
     public class VehicleEvent
     {
-        public string Vehicleid { get; set; }
-        public string VehicleLink { get; set; }
-        public Dictionary<Guid, Event> Events = new Dictionary<Guid, Event>();
+        #region private fields
+        private Dictionary<Guid, Event> events;
+        #endregion //private fields
 
+        #region public properties
+        public string Vehicleid { get; private set; }
+        public string VehicleLink { get; private set; }
+        #endregion //public properties
+
+        #region public methods
+        /// <summary>
+        /// Get an active event from this vehicle
+        /// </summary>
+        /// <param name="currentTicks">current time tick</param>
+        /// <returns>Event</returns>
         public Event GetActiveEvent(long currentTicks)
         {
-            return Events.Values.Where(x => x.IsActive(currentTicks)).FirstOrDefault();
+            return events.Values.Where(x => x.IsActive(currentTicks)).FirstOrDefault();
         }
 
+        /// <summary>
+        /// Get a future event from this vehicle
+        /// </summary>
+        /// <param name="currentTicks">current time tick</param>
+        /// <returns>Event</returns>
         public Event GetFutureOnCallEvent(long currentTicks)
         {
-            return Events.Values.Where(x => x.TimeSpan.StartTick > currentTicks && x.EventType == EventType.OnCall).FirstOrDefault();
+            return events.Values.Where(x => x.TimeSpan.StartTick > currentTicks && x.EventType == EventType.OnCall).FirstOrDefault();
         }
 
+        /// <summary>
+        /// If this vehicle has OnCall event?
+        /// </summary>
+        /// <returns>True if it has, otherwise false</returns>
         public bool HasOnCallEvent()
         {
-            return Events.Values.Where(x => x.EventType == EventType.OnCall).Any();
+            return events.Values.Where(x => x.EventType == EventType.OnCall).Any();
         }
 
+        /// <summary>
+        /// Add a power-on event to this vehicle
+        /// </summary>
         public void AddPowerOnEvent()
         {
             Event evet = new Event(EventType.PowerOn);
-            this.Events.Add(evet.guid, evet);
+            events.Add(evet.guid, evet);
         }
 
+        /// <summary>
+        /// Add a on-call event to this vehicle
+        /// </summary>
+        /// <param name="currentTick">Current time tick</param>
         public void AddOnCallEvent(long currentTick)
         {
             Random rnd = new Random();
             //set the timespan range. start tick will always be current range to 
             long endTick = rnd.Next((int)currentTick + 60, 3600);
             Event evet = new Event(EventType.OnCall, new VS.TimeSpan(currentTick, endTick));
-            this.Events.Add(evet.guid, evet);
+            events.Add(evet.guid, evet);
         }
 
-        public void removeEvent(Event events)
+        /// <summary>
+        /// Remove an event from this vehicle
+        /// </summary>
+        /// <param name="evt">Event</param>
+        public void removeEvent(Event evt)
         {
-            Events.Remove(events.guid);
+            events.Remove(evt.guid);
         }
+
+        #endregion //public methods
     }
 }

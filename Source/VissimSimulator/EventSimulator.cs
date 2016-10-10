@@ -13,30 +13,47 @@ namespace VissimSimulator
     {
         #region private fields
         private const string CellLinkRelationFilePath = @".\Input\Taicang_Major_Cell_Link_Related.csv";
+        private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Examples Demo\Urban Intersection Beijing.CN\Intersection Beijing.inpx";
         private const char Delimiter = ',';
         private const long SimulationTicks = 3600;
 
-        private CellularNetwork cellularNetwork = new CellularNetwork();
-        private Dictionary<string, VehicleEvent> VehicleEvents = new Dictionary<string, VehicleEvent>();
-        private BlockingCollection<CellularTowerEvent> CellularTowerEvents = new BlockingCollection<CellularTowerEvent>();
-        private List<CollectorWorker> CollectorWorkers;
+        //the cellular network
+        private CellularNetwork cellularNetwork;
+
+        //Dictionary that holds all vehicle events in the network
+        private Dictionary<string, VehicleEvent> vehicleEvents;
+
+        //BlockingCollection that holds all CellularTower Events
+        private BlockingCollection<CellularTowerEvent> cellularTowerEvents;
+
+        //Vissim simulator
+        private Vissim vissim;
         #endregion //end private fields
 
         #region public methods
+        public EventSimulator()
+        {
+            CellularNetwork cellularNetwork;
+            Dictionary<string, VehicleEvent> VehicleEvents = new Dictionary<string, VehicleEvent>();
+            BlockingCollection<CellularTowerEvent> CellularTowerEvents = new BlockingCollection<CellularTowerEvent>();
+        }
+
+
         public void Run()
         {
-            Vissim vissim = new Vissim();
+            vissim = new Vissim();
             ///Load Vissim net work
-            vissim.LoadNet(@"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Examples Demo\Urban Intersection Beijing.CN\Intersection Beijing.inpx");
+            vissim.LoadNet();
 
             //initialize the cellular network
             cellularNetwork.LoadFromFile(CellLinkRelationFilePath, Delimiter);
             //set up the collector threads. For now, only need one thread on this
 
-            Task collector = Task.Factory.StartNew(() =>
+            //for now, we only need 1 worker to collect the event
+            CollectorWorker worker = new CollectorWorker();
+            Task collectorTask = Task.Factory.StartNew( () =>
             {
-                CollectorWorker worker = new CollectorWorker();
-                foreach (CellularTowerEvent cEvent in CellularTowerEvents.GetConsumingEnumerable())
+                foreach (CellularTowerEvent cEvent in cellularTowerEvents.GetConsumingEnumerable())
                 {
                     worker.Process(cEvent);
                 }
@@ -53,10 +70,10 @@ namespace VissimSimulator
                         string vehicleId = vehicle.Id;
 
                         //first check if this vehicle has event
-                        if (VehicleEvents.ContainsKey(vehicleId))
+                        if (vehicleEvents.ContainsKey(vehicleId))
                         {
                             CellularTowerEvent cEvent = DetectEvent(vehicleId, currentTick);
-                            CellularTowerEvents.Add(cEvent);
+                            cellularTowerEvents.Add(cEvent);
                         }
                         else //if no vehicle event, that means this is new vehicle entering the vissim network
                         {
@@ -65,12 +82,22 @@ namespace VissimSimulator
                     }
                 }
             });
+
+            try
+            {
+                Task.WaitAll(simulator, collectorTask);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(string.Format("there are some exceptions happened: {0}", ex.Message));
+                throw ex;
+            }
         }
 
 
         public void Exit()
         {
-            //vissim.Exit();
+            vissim.Exit();
         }
 
         #endregion //end public methods
@@ -78,7 +105,7 @@ namespace VissimSimulator
         #region private methods
         private CellularTowerEvent DetectEvent(string vehicleId, long currentTick)
         {
-            VehicleEvent vEvent = VehicleEvents[vehicleId];
+            VehicleEvent vEvent = vehicleEvents[vehicleId];
 
             //find out the active event on this vehicle
             Event evt = vEvent.GetActiveEvent(currentTick);
@@ -127,7 +154,7 @@ namespace VissimSimulator
                     vEvent.AddOnCallEvent(currentTick);
                 }
 
-                VehicleEvents.Add(vEvent.Vehicleid, vEvent);
+                vehicleEvents.Add(vEvent.Vehicleid, vEvent);
             }
         }
         #endregion private methods

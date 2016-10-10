@@ -48,6 +48,7 @@
     <Compile Include="Event.cs" />
     <Compile Include="EventSimulator.cs" />
     <Compile Include="Location.cs" />
+    <Compile Include="MockInterfaces\VissimMockInterface.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VehicleEvent.cs" />
