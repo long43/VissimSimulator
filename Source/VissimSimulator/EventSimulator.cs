@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 using VS = VissimSimulator;
-//using VISSIMLIB;
+using VISSIMLIB;
 
 namespace VissimSimulator
 {
@@ -13,7 +13,7 @@ namespace VissimSimulator
     {
         #region private fields
         private const string CellLinkRelationFilePath = @".\Input\Taicang_Major_Cell_Link_Related.csv";
-        private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Examples Demo\Urban Intersection Beijing.CN\Intersection Beijing.inpx";
+        private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang.inpx";
         private const char Delimiter = ',';
         private const long SimulationTicks = 3600;
 
@@ -67,7 +67,7 @@ namespace VissimSimulator
                     foreach (IVehicle vehicle in vissim.Net.Vehicles)
                     {
                         //get the vehicle id
-                        string vehicleId = vehicle.Id;
+                        string vehicleId = vehicle.AttValue["No"];
 
                         //first check if this vehicle has event
                         if (vehicleEvents.ContainsKey(vehicleId))
