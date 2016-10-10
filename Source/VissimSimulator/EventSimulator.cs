@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 using VS = VissimSimulator;
-//using VISSIMLIB;
+using VISSIMLIB;
 
 namespace VissimSimulator
 {
@@ -67,7 +67,7 @@ namespace VissimSimulator
                     foreach (IVehicle vehicle in vissim.Net.Vehicles)
                     {
                         //get the vehicle id
-                        string vehicleId = vehicle.Id;
+                        string vehicleId = vehicle.AttValue["No"];
 
                         //first check if this vehicle has event
                         if (vehicleEvents.ContainsKey(vehicleId))
