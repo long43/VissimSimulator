@@ -21,6 +21,7 @@ namespace VissimSimulator
         public VS.TimeSpan TimeSpan { get; private set; }
         #endregion //public properties
 
+        #region public methods
         /// <summary>
         /// Constructor - Construct the event for a given event type
         /// </summary>
@@ -58,6 +59,7 @@ namespace VissimSimulator
             }
             return false;
         }
+        #endregion //public methods
     }
 
     public enum EventType

@@ -7,8 +7,11 @@ namespace VissimSimulator
 {
     public class CellularNetwork
     {
+        #region private fields
         private Dictionary<string, Location> network;
+        #endregion //private fields
 
+        #region public methods
         public ICollection<Location> Locations
         {
             get 
@@ -193,5 +196,7 @@ namespace VissimSimulator
                     where location.ContainsCell(cellId)
                     select location).FirstOrDefault();
         }
+
+        #endregion //public methods
     }
 }

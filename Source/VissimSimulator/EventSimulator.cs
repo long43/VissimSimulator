@@ -94,7 +94,9 @@ namespace VissimSimulator
             }
         }
 
-
+        /// <summary>
+        /// Exit the vissim
+        /// </summary>
         public void Exit()
         {
             vissim.Exit();
