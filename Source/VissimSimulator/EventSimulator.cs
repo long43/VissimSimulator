@@ -76,6 +76,8 @@ namespace VissimSimulator
                         {
                             GenerateEvent(currentTick);
                         }
+
+                        //you need to make the Vissim simulation move forward one tick. Find the corresponding Vissim doc on how the COM-API calls look like.
                     }
                 }
             });
