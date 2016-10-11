@@ -11,7 +11,6 @@ namespace VissimSimulator
         #region public properties
         public string LocationId { set; get; }
         public string CellularTowerId { set; get; }
-
         public Event Event { get; private set; }
         #endregion //public properties 
 
