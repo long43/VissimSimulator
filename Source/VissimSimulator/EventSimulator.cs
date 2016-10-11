@@ -28,7 +28,7 @@ namespace VissimSimulator
 
         //Vissim simulator
         private Vissim vissim;
-        #endregion //end private fields
+        #endregion //end private fields*
 
         #region public methods
         public EventSimulator()
