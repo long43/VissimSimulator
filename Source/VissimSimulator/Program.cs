@@ -1,5 +1,5 @@
-﻿using System;
-using VISSIMLIB; 
+﻿using VISSIMLIB;
+
 namespace VissimSimulator
 {
     /// <summary>
