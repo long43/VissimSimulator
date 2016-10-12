@@ -1,14 +1,9 @@
-<<<<<<< HEAD
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Data.SqlClient;
-
-=======
-﻿
->>>>>>> 7d85110e02215a6f892592b52d0d34148560beb8
+using System.Data.OracleClient;
 
 namespace VissimSimulator
 {
@@ -35,7 +30,7 @@ namespace VissimSimulator
                     string eventType = Convert.ToString(evt.Event.EventType);
                     //TODO Which time we should use?
                     //Is the data format correct? Does C# have the data type like Timestamp for SQL?
-                    string eventTimeSpan = string.Format("{0:yyyy-MM-dd_hh-mm-ss-tt}", evt.Event.TimeSpan.StartTick);
+                    string eventTimeSpan = string.Format("{0:yyyy-MM-dd_hh-mm-ss-tt}", evt.Tick);
                     AddEvent(locationId, cellularTowerId, eventType, eventTimeSpan);
                 }
                 catch
@@ -50,7 +45,7 @@ namespace VissimSimulator
         /// </summary>
         public void TryCreateTbale()
         {
-            using (SqlConnection con = new SqlConnection(
+            using (OracleConnection con = new OracleConnection(
                ///TODO add the right connection path for SQL database
                "user id=system;" +
                "password=its123; server=serverurl;" +
@@ -62,7 +57,7 @@ namespace VissimSimulator
                 con.Open();
                 try
                 {
-                    using (SqlCommand command = new SqlCommand(
+                    using (OracleCommand command = new OracleCommand(
                         "CREATE TBALE OUTPUT1(LocationId INT, CellularTowerId INT, EventType TEXT, EventTimeSpan TEXT)", con))
                     {
                         command.ExecuteNonQuery();
@@ -83,20 +78,20 @@ namespace VissimSimulator
         /// <param name="eventTimeSpan">The time of the event when it occurs.</param>
         static void AddEvent(int locationId, int cellularTowerId, string eventType, string eventTimeSpan)
         {
-            using (SqlConnection con = new SqlConnection(
+            using (OracleConnection con = new OracleConnection(
                 ///TODO add the right connection path for SQL database
                 ))
             {
                 con.Open();
                 try
                 {
-                    using (SqlCommand command = new SqlCommand(
+                    using (OracleCommand command = new OracleCommand(
                         "INSERT INTO OUTPUT VALUES(@LocationId, @CellularTowerId, @EventType, @EventTimeSpan)", con))
                     {
-                        command.Parameters.Add(new SqlParameter("LocationId", locationId));
-                        command.Parameters.Add(new SqlParameter("CellularTowerId", cellularTowerId));
-                        command.Parameters.Add(new SqlParameter("EventType", eventType));
-                        command.Parameters.Add(new SqlParameter("EventTimeSpan", eventTimeSpan));
+                        command.Parameters.Add(new OracleParameter("LocationId", locationId));
+                        command.Parameters.Add(new OracleParameter("CellularTowerId", cellularTowerId));
+                        command.Parameters.Add(new OracleParameter("EventType", eventType));
+                        command.Parameters.Add(new OracleParameter("EventTimeSpan", eventTimeSpan));
                         command.ExecuteNonQuery();
                     }
                 }

@@ -7,6 +7,7 @@ namespace VissimSimulator
         public string LocationId { set; get; }
         public string CellularTowerId { set; get; }
         public Event Event { get; private set; }
+        public long Tick { set; get; }
         #endregion //public properties 
 
         #region public methods
@@ -44,7 +45,10 @@ namespace VissimSimulator
                 LocationId = id;
             }
             Event = evt;
+            /// The time when cellular tower recorded the event.
+            Tick = evt.TimeSpan.StartTick;
         }
+
 
         #endregion //public methods
     }
