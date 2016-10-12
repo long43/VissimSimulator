@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Threading;
 using System.Threading.Tasks;
-using System.IO;
-using VS = VissimSimulator;
 using VISSIMLIB;
 
 namespace VissimSimulator
@@ -33,7 +30,7 @@ namespace VissimSimulator
         #region public methods
         public EventSimulator()
         {
-            CellularNetwork cellularNetwork;
+            CellularNetwork cellularNetwork = new CellularNetwork();
             Dictionary<string, VehicleEvent> VehicleEvents = new Dictionary<string, VehicleEvent>();
             BlockingCollection<CellularTowerEvent> CellularTowerEvents = new BlockingCollection<CellularTowerEvent>();
         }
@@ -80,6 +77,7 @@ namespace VissimSimulator
                             GenerateEvent(currentTick);
                         }
                     }
+                    //you need to make the Vissim simulation move forward one tick. Find the corresponding Vissim doc on how the COM-API calls look like.
                 }
             });
 

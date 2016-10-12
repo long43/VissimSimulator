@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -5,6 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
 
+=======
+﻿
+>>>>>>> 7d85110e02215a6f892592b52d0d34148560beb8
 
 namespace VissimSimulator
 {
