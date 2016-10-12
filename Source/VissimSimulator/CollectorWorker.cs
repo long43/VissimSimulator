@@ -47,7 +47,12 @@ namespace VissimSimulator
         public void TryCreateTbale()
         {
             using (SqlConnection con = new SqlConnection(
-                ///TODO add the right connection path for SQL database
+               ///TODO add the right connection path for SQL database
+               "user id=system;" +
+               "password=its123; server=serverurl;" +
+               "Trusted_Connection=yes;" +
+               "database=database; " +
+               "connection timeout=30"
                 ))
             {
                 con.Open();
