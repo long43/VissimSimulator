@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Data.OracleClient;
+using Oracle.DataAccess.Client;
 
 namespace VissimSimulator
 {
@@ -29,8 +29,8 @@ namespace VissimSimulator
                     int cellularTowerId = int.Parse(evt.CellularTowerId);
                     string eventType = Convert.ToString(evt.Event.EventType);
                     //TODO Which time we should use?
-                    //Is the data format correct? Does C# have the data type like Timestamp for SQL?
-                    string eventTimeSpan = string.Format("{0:yyyy-MM-dd_hh-mm-ss-tt}", evt.Tick);
+                    //Is the data format correct? Does C# have the data type like Timestamp for ORACLE?
+                    string eventTimeSpan = string.Format("{0:yyyy-MM-dd_hh-mm-ss-tt}", evt.CurrentTicks);
                     AddEvent(locationId, cellularTowerId, eventType, eventTimeSpan);
                 }
                 catch
@@ -46,7 +46,7 @@ namespace VissimSimulator
         public void TryCreateTbale()
         {
             using (OracleConnection con = new OracleConnection(
-               ///TODO add the right connection path for SQL database
+               ///TODO add the right connection path for ORACLE database
                "user id=system;" +
                "password=its123; server=serverurl;" +
                "Trusted_Connection=yes;" +
@@ -79,7 +79,7 @@ namespace VissimSimulator
         static void AddEvent(int locationId, int cellularTowerId, string eventType, string eventTimeSpan)
         {
             using (OracleConnection con = new OracleConnection(
-                ///TODO add the right connection path for SQL database
+                ///TODO add the right connection path for ORACLE database
                 ))
             {
                 con.Open();

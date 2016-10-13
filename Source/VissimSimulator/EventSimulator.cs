@@ -115,15 +115,16 @@ namespace VissimSimulator
                 //if the event is happening, see if any cellTower/Location capture it
                 string linkId = vEvent.VehicleLink;
                 CellularTowerEvent cEvent = null;
+                ///current time.
                 switch (evt.EventType)
                 {
                     case EventType.PowerOn: //this is a LU event
                         Location location = cellularNetwork.FindLocationByLinkId(linkId);
-                        cEvent = new CellularTowerEvent(location.LocationId, evt);
+                        cEvent = new CellularTowerEvent(location.LocationId, evt, currentTick);
                         break;
                     case EventType.OnCall: //this is a hand-off event
                         CellTower cell = cellularNetwork.FindCellTowerByLinkId(linkId);
-                        cEvent = new CellularTowerEvent(cell.CellTowerId, evt);
+                        cEvent = new CellularTowerEvent(cell.CellTowerId, evt, currentTick);
                         break;
                     default:
                         break;
