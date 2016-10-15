@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using VISSIMLIB;
+using Oracle.DataAccess.Client;
 
 namespace VissimSimulator
 {
@@ -34,6 +35,34 @@ namespace VissimSimulator
             Dictionary<string, VehicleEvent> VehicleEvents = new Dictionary<string, VehicleEvent>();
             BlockingCollection<CellularTowerEvent> CellularTowerEvents = new BlockingCollection<CellularTowerEvent>();
         }
+       
+        /// <summary>
+        /// This method attempts to create the OUTPUT QRACLE table.
+        /// If will do nothing but print an error if the table already exists.
+        /// </summary>
+        public void TryCreateTbale()
+        {
+
+            using (OracleConnection con = new OracleConnection())
+            {
+                con.ConnectionString = "host = serverName;databse = myDatabse; uid = userName; pwd = password";
+                con.Open();
+                try
+                {
+                    using (OracleCommand command = new OracleCommand(
+                        "CREATE TBALE OUTPUT1(LocationId INT, CellularTowerId INT, EventType TEXT, EventTimeSpan TEXT)", con))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("Table not created.");
+                }
+            }
+        }
+
+
 
 
         public void Run()
@@ -44,7 +73,10 @@ namespace VissimSimulator
 
             //initialize the cellular network
             cellularNetwork.LoadFromFile(CellLinkRelationFilePath, Delimiter);
+            ///initialize the table
+            TryCreateTbale();
             //set up the collector threads. For now, only need one thread on this
+
 
             //for now, we only need 1 worker to collect the event
             CollectorWorker worker = new CollectorWorker();
@@ -80,6 +112,9 @@ namespace VissimSimulator
                     //you need to make the Vissim simulation move forward one tick. Find the corresponding Vissim doc on how the COM-API calls look like.
                 }
             });
+
+
+
 
             try
             {

@@ -19,7 +19,8 @@ namespace VissimSimulator
         public void Process(CellularTowerEvent evt)
         {
             //at least we need to persisit the CellularTowerEvent
-            TryCreateTbale();
+            //connect to database;
+            Connect();
             //read the data into database;
             while (true)
             {
@@ -30,7 +31,7 @@ namespace VissimSimulator
                     string eventType = Convert.ToString(evt.Event.EventType);
                     //TODO Which time we should use?
                     //Is the data format correct? Does C# have the data type like Timestamp for ORACLE?
-                    string eventTimeSpan = string.Format("{0:yyyy-MM-dd_hh-mm-ss-tt}", evt.CurrentTicks);
+                    string eventTimeSpan = (evt.CurrentTick).ToString();
                     AddEvent(locationId, cellularTowerId, eventType, eventTimeSpan);
                 }
                 catch
@@ -40,35 +41,15 @@ namespace VissimSimulator
             }
         }
         /// <summary>
-        /// This method attempts to create the OUTPUT SQL table.
-        /// If will do nothing but print an error if the table already exists.
+        /// Connect the database.
         /// </summary>
-        public void TryCreateTbale()
+        public void Connect()
         {
-            using (OracleConnection con = new OracleConnection(
-               ///TODO add the right connection path for ORACLE database
-               "user id=system;" +
-               "password=its123; server=serverurl;" +
-               "Trusted_Connection=yes;" +
-               "database=database; " +
-               "connection timeout=30"
-                ))
-            {
-                con.Open();
-                try
-                {
-                    using (OracleCommand command = new OracleCommand(
-                        "CREATE TBALE OUTPUT1(LocationId INT, CellularTowerId INT, EventType TEXT, EventTimeSpan TEXT)", con))
-                    {
-                        command.ExecuteNonQuery();
-                    }
-                }
-                catch
-                {
-                    Console.WriteLine("Table not created.");
-                }
-            }
+            OracleConnection con = new OracleConnection();
+            con.ConnectionString = "host = serverName;databse = myDatabse; uid = userName; pwd = password";
+            con.Open();
         }
+
         /// <summary>
         /// Insert output data into the SQL database table.
         /// </summary>
@@ -78,12 +59,8 @@ namespace VissimSimulator
         /// <param name="eventTimeSpan">The time of the event when it occurs.</param>
         static void AddEvent(int locationId, int cellularTowerId, string eventType, string eventTimeSpan)
         {
-            using (OracleConnection con = new OracleConnection(
-                ///TODO add the right connection path for ORACLE database
-                ))
-            {
-                con.Open();
-                try
+            OracleConnection con = new OracleConnection();
+            try
                 {
                     using (OracleCommand command = new OracleCommand(
                         "INSERT INTO OUTPUT VALUES(@LocationId, @CellularTowerId, @EventType, @EventTimeSpan)", con))
@@ -99,7 +76,6 @@ namespace VissimSimulator
                 {
                     Console.WriteLine("Count not insert.");
                 }
-            }
         }
     }
 }

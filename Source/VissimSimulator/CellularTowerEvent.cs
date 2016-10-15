@@ -5,10 +5,10 @@ namespace VissimSimulator
     public class CellularTowerEvent
     {
         #region public properties
-        public string LocationId { set; get; }
-        public string CellularTowerId { set; get; }
-        public Event Event { get; private set; }
-        public long CurrentTicks { set; get; }
+        public string LocationId { private set; get; }
+        public string CellularTowerId { private set; get; }
+        public Event Event { private set; get; }
+        public long CurrentTick { private set; get; }
         #endregion //public properties 
 
         #region public methods
@@ -47,7 +47,7 @@ namespace VissimSimulator
                 LocationId = id;
             }
             Event = evt;
-            CurrentTicks = tick;
+            CurrentTick = tick;
         }
 
 
