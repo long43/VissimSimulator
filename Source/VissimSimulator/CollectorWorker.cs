@@ -19,8 +19,6 @@ namespace VissimSimulator
         public void Process(CellularTowerEvent evt)
         {
             //at least we need to persisit the CellularTowerEvent
-            //connect to database;
-            Connect();
             //read the data into database;
             while (true)
             {
@@ -41,16 +39,6 @@ namespace VissimSimulator
             }
         }
         /// <summary>
-        /// Connect the database.
-        /// </summary>
-        public void Connect()
-        {
-            OracleConnection con = new OracleConnection();
-            con.ConnectionString = "host = serverName;databse = myDatabse; uid = userName; pwd = password";
-            con.Open();
-        }
-
-        /// <summary>
         /// Insert output data into the SQL database table.
         /// </summary>
         /// <param name="locatioanId">The location id of the cell station.</param>
@@ -59,8 +47,13 @@ namespace VissimSimulator
         /// <param name="eventTimeSpan">The time of the event when it occurs.</param>
         static void AddEvent(int locationId, int cellularTowerId, string eventType, string eventTimeSpan)
         {
-            OracleConnection con = new OracleConnection();
-            try
+            using (OracleConnection con = new OracleConnection(
+                ///TODO add the right connection path for ORACLE database
+                ))
+            {
+                con.ConnectionString = "host = serverName;databse = myDatabse; uid = userName; pwd = password";
+                con.Open();
+                try
                 {
                     using (OracleCommand command = new OracleCommand(
                         "INSERT INTO OUTPUT VALUES(@LocationId, @CellularTowerId, @EventType, @EventTimeSpan)", con))
@@ -76,6 +69,7 @@ namespace VissimSimulator
                 {
                     Console.WriteLine("Count not insert.");
                 }
+            }
         }
     }
 }

@@ -57,7 +57,7 @@ namespace VissimSimulator
                 }
                 catch
                 {
-                    Console.WriteLine("Table not created.");
+                    Console.WriteLine("Table already exists, or something wrong with the connection");
                 }
             }
         }
