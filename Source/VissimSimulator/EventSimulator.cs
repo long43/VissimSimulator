@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using VISSIMLIB;
+using Oracle.DataAccess.Client;
 
 namespace VissimSimulator
 {
@@ -25,7 +26,7 @@ namespace VissimSimulator
 
         //Vissim simulator
         private Vissim vissim;
-        #endregion //end private fields
+        #endregion //end private fields*
 
         #region public methods
         public EventSimulator()
@@ -34,6 +35,34 @@ namespace VissimSimulator
             Dictionary<string, VehicleEvent> VehicleEvents = new Dictionary<string, VehicleEvent>();
             BlockingCollection<CellularTowerEvent> CellularTowerEvents = new BlockingCollection<CellularTowerEvent>();
         }
+       
+        /// <summary>
+        /// This method attempts to create the OUTPUT QRACLE table.
+        /// If will do nothing but print an error if the table already exists.
+        /// </summary>
+        public void TryCreateTbale()
+        {
+
+            using (OracleConnection con = new OracleConnection())
+            {
+                con.ConnectionString = "host = serverName;databse = myDatabse; uid = userName; pwd = password";
+                con.Open();
+                try
+                {
+                    using (OracleCommand command = new OracleCommand(
+                        "CREATE TBALE OUTPUT1(LocationId INT, CellularTowerId INT, EventType TEXT, EventTimeSpan TEXT)", con))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("Table not created.");
+                }
+            }
+        }
+
+
 
 
         public void Run()
@@ -44,7 +73,10 @@ namespace VissimSimulator
 
             //initialize the cellular network
             cellularNetwork.LoadFromFile(CellLinkRelationFilePath, Delimiter);
+            ///initialize the table
+            TryCreateTbale();
             //set up the collector threads. For now, only need one thread on this
+
 
             //for now, we only need 1 worker to collect the event
             CollectorWorker worker = new CollectorWorker();
@@ -81,6 +113,9 @@ namespace VissimSimulator
                 }
             });
 
+
+
+
             try
             {
                 Task.WaitAll(simulator, collectorTask);
@@ -115,15 +150,16 @@ namespace VissimSimulator
                 //if the event is happening, see if any cellTower/Location capture it
                 string linkId = vEvent.VehicleLink;
                 CellularTowerEvent cEvent = null;
+                ///current time.
                 switch (evt.EventType)
                 {
                     case EventType.PowerOn: //this is a LU event
                         Location location = cellularNetwork.FindLocationByLinkId(linkId);
-                        cEvent = new CellularTowerEvent(location.LocationId, evt);
+                        cEvent = new CellularTowerEvent(location.LocationId, evt, currentTick);
                         break;
                     case EventType.OnCall: //this is a hand-off event
                         CellTower cell = cellularNetwork.FindCellTowerByLinkId(linkId);
-                        cEvent = new CellularTowerEvent(cell.CellTowerId, evt);
+                        cEvent = new CellularTowerEvent(cell.CellTowerId, evt, currentTick);
                         break;
                     default:
                         break;

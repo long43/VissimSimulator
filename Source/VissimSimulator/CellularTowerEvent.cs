@@ -1,13 +1,14 @@
-﻿
+﻿using System;
+
 namespace VissimSimulator
 {
     public class CellularTowerEvent
     {
         #region public properties
-        public string LocationId { set; get; }
-        public string CellularTowerId { set; get; }
-
-        public Event Event { get; private set; }
+        public string LocationId { private set; get; }
+        public string CellularTowerId { private set; get; }
+        public Event Event { private set; get; }
+        public long CurrentTick { private set; get; }
         #endregion //public properties 
 
         #region public methods
@@ -28,13 +29,14 @@ namespace VissimSimulator
         {
             return !IsLocationUpdate();
         }
-
+     
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="id">id, either cell id or location id</param>
         /// <param name="evt">Event</param>
-        public CellularTowerEvent(string id, Event evt)
+        /// <param name="currentTicks">current time tick</param>
+        public CellularTowerEvent(string id, Event evt, long tick)
         {
             if (evt.EventType == EventType.OnCall)
             {
@@ -45,7 +47,9 @@ namespace VissimSimulator
                 LocationId = id;
             }
             Event = evt;
+            CurrentTick = tick;
         }
+
 
         #endregion //public methods
     }
