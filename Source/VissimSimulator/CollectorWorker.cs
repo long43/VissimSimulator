@@ -20,7 +20,14 @@ namespace VissimSimulator
         {
             //at least we need to persisit the CellularTowerEvent
             //read the data into database;
-            while (true)
+            using (OracleConnection con = new OracleConnection(
+                ///TODO add the right connection path for ORACLE database
+                ))
+            {
+                con.ConnectionString = "host = serverName;databse = myDatabse; uid = userName; pwd = password";
+                con.Open();
+            }
+                while (true)
             {
                 try
                 {
