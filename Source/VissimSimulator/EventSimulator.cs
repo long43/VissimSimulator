@@ -61,10 +61,6 @@ namespace VissimSimulator
                 }
             }
         }
-
-
-
-
         public void Run()
         {
             vissim = new Vissim();
@@ -113,10 +109,6 @@ namespace VissimSimulator
                     vissim.Simulation.RunSingleStep();
                 }
             });
-
-
-
-
             try
             {
                 Task.WaitAll(simulator, collectorTask);
