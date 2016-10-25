@@ -57,14 +57,10 @@ namespace VissimSimulator
                 }
                 catch
                 {
-                    Console.WriteLine("Table not created.");
+                    Console.WriteLine("Table already exists, or something wrong with the connection");
                 }
             }
         }
-
-
-
-
         public void Run()
         {
             vissim = new Vissim();
@@ -95,7 +91,7 @@ namespace VissimSimulator
                 {
                     foreach (IVehicle vehicle in vissim.Net.Vehicles)
                     {
-                        //get the vehicle id
+                        //get the vehicle id+
                         string vehicleId = vehicle.AttValue["No"];
 
                         //first check if this vehicle has event
@@ -110,12 +106,9 @@ namespace VissimSimulator
                         }
                     }
                     //you need to make the Vissim simulation move forward one tick. Find the corresponding Vissim doc on how the COM-API calls look like.
+                    vissim.Simulation.RunSingleStep();
                 }
             });
-
-
-
-
             try
             {
                 Task.WaitAll(simulator, collectorTask);
