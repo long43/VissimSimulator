@@ -24,7 +24,7 @@ namespace VissimSimulator
                 ///TODO add the right connection path for ORACLE database
                 ))
             {
-                con.ConnectionString = "host = serverName;databse = myDatabse; uid = userName; pwd = password";
+                con.ConnectionString = "host = localhost; databse = DB1; uid = sys; pwd = ls1989711";
                 con.Open();
             }
                 while (true)
@@ -58,7 +58,7 @@ namespace VissimSimulator
                 ///TODO add the right connection path for ORACLE database
                 ))
             {
-                con.ConnectionString = "host = serverName;databse = myDatabse; uid = userName; pwd = password";
+                con.ConnectionString = "host = localhost; databse = DB1; uid = sys; pwd = ls1989711";
                 con.Open();
                 try
                 {

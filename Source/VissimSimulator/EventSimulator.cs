@@ -45,7 +45,7 @@ namespace VissimSimulator
 
             using (OracleConnection con = new OracleConnection())
             {
-                con.ConnectionString = "host = serverName;databse = myDatabse; uid = userName; pwd = password";
+                con.ConnectionString = "host = localhost; databse = DB1; uid = sys; pwd = ls1989711";
                 con.Open();
                 try
                 {
