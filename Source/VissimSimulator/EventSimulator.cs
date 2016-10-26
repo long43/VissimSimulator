@@ -10,8 +10,12 @@ namespace VissimSimulator
     public class EventSimulator
     {
         #region private fields
-        private const string CellLinkRelationFilePath = @".\Input\Taicang_Major_Cell_Link_Related.csv";
-        private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang.inpx";
+        //private const string CellLinkRelationFilePath = @".\Input\Taicang_Major_Cell_Link_Related.csv";
+        //Test CSV file
+        private const string CellLinkRelationFilePath = @".\Input\Beijing_Major_Cell_Link_Related.csv";
+        //private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang.inpx";
+        //Test network
+        private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Examples Demo\Urban Intersection Beijing.CN\Intersection Beijing.inpx";
         private const char Delimiter = ',';
         private const long SimulationTicks = 3600;
 
