@@ -31,7 +31,7 @@ namespace VissimSimulator
         //Vissim simulator
         private Vissim vissim;
         #endregion //end private fields*
-
+         
         #region public methods
         public EventSimulator()
         {
@@ -173,7 +173,7 @@ namespace VissimSimulator
             int vehiclePossible = rnd.Next(0, 10);
 
             //let's say 80% of vehicles will have PowerOn event
-            if (vehiclePossible <= 8)
+            if (vehiclePossible <= 7)
             {
                 //no vehicle event on this vehicle yet. Means this is a new vehicle in the vissim network
                 VehicleEvent vEvent = new VehicleEvent();
