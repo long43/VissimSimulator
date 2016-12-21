@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using System.Configuration;
 using VISSIMLIB;
-using Oracle.DataAccess.Client;
+using Oracle.ManagedDataAccess.Client;
 
 namespace VissimSimulator
 {
@@ -45,7 +46,7 @@ namespace VissimSimulator
 
             using (OracleConnection con = new OracleConnection())
             {
-                con.ConnectionString = "host = serverName;databse = myDatabse; uid = userName; pwd = password";
+                con.ConnectionString = ConfigurationManager.AppSettings["SqlConnectionString"];
                 con.Open();
                 try
                 {
@@ -61,6 +62,7 @@ namespace VissimSimulator
                 }
             }
         }
+
         public void Run()
         {
             vissim = new Vissim();
@@ -72,8 +74,6 @@ namespace VissimSimulator
             ///initialize the table
             TryCreateTbale();
             //set up the collector threads. For now, only need one thread on this
-
-
             //for now, we only need 1 worker to collect the event
             CollectorWorker worker = new CollectorWorker();
             Task collectorTask = Task.Factory.StartNew( () =>
@@ -105,7 +105,7 @@ namespace VissimSimulator
                             GenerateEvent(currentTick);
                         }
                     }
-                    //you need to make the Vissim simulation move forward one tick. Find the corresponding Vissim doc on how the COM-API calls look like.
+                    //make the Vissim simulation move forward one tick
                     vissim.Simulation.RunSingleStep();
                 }
             });
