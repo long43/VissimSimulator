@@ -3,27 +3,27 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System.Configuration;
+using System.Data.SqlClient;
 using VISSIMLIB;
-using Oracle.ManagedDataAccess.Client;
 
 namespace VissimSimulator
 {
     public class EventSimulator
     {
         #region private fields
-        private const string CellLinkRelationFilePath = @".\Input\Taicang_Major_Cell_Link_Related.csv";
+        private const string CellLinkRelationFilePath = @"C:\Users\Student\Desktop\VissimSimulator\VissimSimulator\input\Taicang_Major_Cell_Link_Related.csv";
         private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang.inpx";
         private const char Delimiter = ',';
         private const long SimulationTicks = 3600;
 
         //the cellular network
-        private CellularNetwork cellularNetwork;
+        private CellularNetwork cellularNetwork = null;
 
         //Dictionary that holds all vehicle events in the network
-        private Dictionary<string, VehicleEvent> vehicleEvents;
+        private Dictionary<string, VehicleEvent> vehicleEvents = null;
 
         //BlockingCollection that holds all CellularTower Events
-        private BlockingCollection<CellularTowerEvent> cellularTowerEvents;
+        private BlockingCollection<CellularTowerEvent> cellularTowerEvents = null;
 
         //Vissim simulator
         private Vissim vissim;
@@ -32,11 +32,11 @@ namespace VissimSimulator
         #region public methods
         public EventSimulator()
         {
-            CellularNetwork cellularNetwork = new CellularNetwork();
-            Dictionary<string, VehicleEvent> VehicleEvents = new Dictionary<string, VehicleEvent>();
-            BlockingCollection<CellularTowerEvent> CellularTowerEvents = new BlockingCollection<CellularTowerEvent>();
+            cellularNetwork = new CellularNetwork();
+            vehicleEvents = new Dictionary<string, VehicleEvent>();
+            cellularTowerEvents = new BlockingCollection<CellularTowerEvent>();
         }
-       
+
         /// <summary>
         /// This method attempts to create the OUTPUT QRACLE table.
         /// If will do nothing but print an error if the table already exists.
@@ -44,13 +44,13 @@ namespace VissimSimulator
         public void TryCreateTbale()
         {
 
-            using (OracleConnection con = new OracleConnection())
+            using (SqlConnection con = new SqlConnection())
             {
                 con.ConnectionString = ConfigurationManager.AppSettings["SqlConnectionString"];
                 con.Open();
                 try
                 {
-                    using (OracleCommand command = new OracleCommand(
+                    using (SqlCommand command = new SqlCommand(
                         "CREATE TBALE OUTPUT1(LocationId INT, CellularTowerId INT, EventType TEXT, EventTimeSpan TEXT)", con))
                     {
                         command.ExecuteNonQuery();
@@ -67,7 +67,7 @@ namespace VissimSimulator
         {
             vissim = new Vissim();
             ///Load Vissim net work
-            vissim.LoadNet();
+            vissim.LoadNet(VissimSimulatorFilePath);
 
             //initialize the cellular network
             cellularNetwork.LoadFromFile(CellLinkRelationFilePath, Delimiter);
@@ -76,7 +76,7 @@ namespace VissimSimulator
             //set up the collector threads. For now, only need one thread on this
             //for now, we only need 1 worker to collect the event
             CollectorWorker worker = new CollectorWorker();
-            Task collectorTask = Task.Factory.StartNew( () =>
+            Task collectorTask = Task.Factory.StartNew(() =>
             {
                 foreach (CellularTowerEvent cEvent in cellularTowerEvents.GetConsumingEnumerable())
                 {

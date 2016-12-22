@@ -1,6 +1,6 @@
 using System;
 using System.Configuration;
-using Oracle.ManagedDataAccess.Client;
+using System.Data.SqlClient;
 
 namespace VissimSimulator
 {
@@ -21,6 +21,7 @@ namespace VissimSimulator
             long eventTimeSpan = evt.CurrentTick;
             AddEvent(locationId, cellularTowerId, eventType, eventTimeSpan);
         }
+
         /// <summary>
         /// Insert output data into the SQL database table.
         /// </summary>
@@ -30,19 +31,18 @@ namespace VissimSimulator
         /// <param name="eventTimestamp">The time of the event when it occurs.</param>
         static void AddEvent(int locationId, int cellularTowerId, string eventType, long eventTimeTick)
         {
-            using (OracleConnection con = new OracleConnection())
+            using (SqlConnection con = new SqlConnection(ConfigurationManager.AppSettings["SqlConnectionString"]))
             {
-                con.ConnectionString = ConfigurationManager.AppSettings["SqlConnectionString"];
                 con.Open();
                 try
                 {
-                    using (OracleCommand command = new OracleCommand(
+                    using (SqlCommand command = new SqlCommand(
                         "INSERT INTO OUTPUT VALUES(@LocationId, @CellularTowerId, @EventType, @EventTimeSpan)", con))
                     {
-                        command.Parameters.Add(new OracleParameter("LocationId", locationId));
-                        command.Parameters.Add(new OracleParameter("CellularTowerId", cellularTowerId));
-                        command.Parameters.Add(new OracleParameter("EventType", eventType));
-                        command.Parameters.Add(new OracleParameter("EventTimeSpan", eventTimeTick));
+                        command.Parameters.Add(new SqlParameter("LocationId", locationId));
+                        command.Parameters.Add(new SqlParameter("CellularTowerId", cellularTowerId));
+                        command.Parameters.Add(new SqlParameter("EventType", eventType));
+                        command.Parameters.Add(new SqlParameter("EventTimeSpan", eventTimeTick));
                         command.ExecuteNonQuery();
                     }
                 }
