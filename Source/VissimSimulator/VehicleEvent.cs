@@ -8,7 +8,7 @@ namespace VissimSimulator
     public class VehicleEvent
     {
         #region private fields
-        private Dictionary<Guid, Event> events;
+        private Dictionary<Guid, Event> events = new Dictionary<Guid, Event>();
         #endregion //private fields
 
         #region public properties
