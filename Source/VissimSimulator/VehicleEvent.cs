@@ -12,11 +12,17 @@ namespace VissimSimulator
         #endregion //private fields
 
         #region public properties
-        public string Vehicleid { get; private set; }
-        public string VehicleLink { get; private set; }
+        public string VehicleId { get; private set; }
+
         #endregion //public properties
 
         #region public methods
+        public VehicleEvent(string vehicleId)
+        {
+            VehicleId = vehicleId;
+        }
+
+
         /// <summary>
         /// Get an active event from this vehicle
         /// </summary>
