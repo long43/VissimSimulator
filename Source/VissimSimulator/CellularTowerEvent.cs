@@ -5,6 +5,7 @@ namespace VissimSimulator
     public class CellularTowerEvent
     {
         #region public properties
+        public string IMSI { private set; get; }
         public string LocationId { private set; get; }
         public string CellularTowerId { private set; get; }
         public Event Event { private set; get; }
@@ -31,25 +32,19 @@ namespace VissimSimulator
         }
      
         /// <summary>
-        /// Constructor
+        /// 
         /// </summary>
-        /// <param name="id">id, either cell id or location id</param>
-        /// <param name="evt">Event</param>
-        /// <param name="currentTicks">current time tick</param>
-        public CellularTowerEvent(string id, Event evt, long tick)
+        /// <param name="id"></param>
+        /// <param name="evt"></param>
+        /// <param name="tick"></param>
+        public CellularTowerEvent(string imsi, string locationId, string cellularTowerId, Event evt, long tick)
         {
-            if (evt.EventType == EventType.OnCall)
-            {
-                CellularTowerId = id;
-            }
-            else
-            {
-                LocationId = id;
-            }
+            IMSI = imsi;
+            CellularTowerId = cellularTowerId;
+            LocationId = locationId;
             Event = evt;
             CurrentTick = tick;
         }
-
 
         #endregion //public methods
     }
