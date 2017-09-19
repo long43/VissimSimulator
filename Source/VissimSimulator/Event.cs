@@ -44,7 +44,7 @@ namespace VissimSimulator
 
             EventType = type;
 
-            TimeSpan = TimeSpan;
+            TimeSpan = timeSpan;
         }
 
         /// <summary>
