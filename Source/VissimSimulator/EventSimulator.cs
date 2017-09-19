@@ -105,11 +105,14 @@ namespace VissimSimulator
                             //first check if this vehicle has event
                             if (vehicleEvents.ContainsKey(vehicleId.ToString()))
                             {
-                                CellularTowerEvent cEvent = DetectEvent(vehicleId.ToString(), linkId, currentTick);
-                                if (cEvent != null)
+                                foreach (CellularTowerEvent cEvent in DetectEvent(vehicleId.ToString(), linkId, currentTick))
                                 {
-                                    cellularTowerEvents.Add(cEvent);
+                                    if (cEvent != null)
+                                    {
+                                        cellularTowerEvents.Add(cEvent);
+                                    }
                                 }
+
                             }
                             else //if no vehicle event, that means this is new vehicle entering the vissim network
                             {
@@ -143,43 +146,45 @@ namespace VissimSimulator
         #endregion //end public methods
 
         #region private methods
-        private CellularTowerEvent DetectEvent(string vehicleId, string linkId, long currentTick)
+        private IEnumerable<CellularTowerEvent> DetectEvent(string vehicleId, string linkId, long currentTick)
         {
             VehicleEvent vEvent = vehicleEvents[vehicleId];
 
             //find out the active event on this vehicle
-            Event evt = vEvent.GetActiveEvent(currentTick);
-            //check if the event is happenning
-            if (evt != null)
+            foreach (Event evt in vEvent.GetActiveEvent(currentTick))
             {
-                ///current time.
-                Location curlocation = null;
-                CellTower curCell = null;
-                switch (evt.EventType)
+                //check if the event is happenning
+                if (evt != null)
                 {
-                    case EventType.PowerOn: //this is a LU event
-                        curlocation = cellularNetwork.FindLocationByLinkId(linkId);
-                        curCell = cellularNetwork.FindCellTowerByLinkId(linkId);
-                        if (curlocation != null && curCell != null)
-                        {
-                            //for now just use vechileId to represnet IMSI
-                            return new CellularTowerEvent(vehicleId, curlocation.LocationId, curCell.CellTowerId, evt, currentTick);
-                        }
-                        break;
-                    case EventType.OnCall: //this is a hand-off event
-                        curlocation = cellularNetwork.FindLocationByLinkId(linkId);
-                        curCell = cellularNetwork.FindCellTowerByLinkId(linkId);
-                        if (curlocation != null && curCell != null)
-                        {
-                            //for now just use vechileId to represnet IMSI
-                            return new CellularTowerEvent(vehicleId, curlocation.LocationId, curCell.CellTowerId, evt, currentTick);
-                        }
-                        break;
-                    default:
-                        break;
+                    ///current time.
+                    Location curlocation = null;
+                    CellTower curCell = null;
+                    switch (evt.EventType)
+                    {
+                        case EventType.PowerOn: //this is a LU event
+                            curlocation = cellularNetwork.FindLocationByLinkId(linkId);
+                            curCell = cellularNetwork.FindCellTowerByLinkId(linkId);
+                            if (curlocation != null && curCell != null)
+                            {
+                                //for now just use vechileId to represnet IMSI
+                                yield return new CellularTowerEvent(vehicleId, curlocation.LocationId, curCell.CellTowerId, evt, currentTick);
+                            }
+                            break;
+                        case EventType.OnCall: //this is a hand-off event
+                            curlocation = cellularNetwork.FindLocationByLinkId(linkId);
+                            curCell = cellularNetwork.FindCellTowerByLinkId(linkId);
+                            if (curlocation != null && curCell != null)
+                            {
+                                //for now just use vechileId to represnet IMSI
+                                yield return new CellularTowerEvent(vehicleId, curlocation.LocationId, curCell.CellTowerId, evt, currentTick);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
-            return null;
+            yield return null;
         }
 
         private void GenerateEvent(string vehicleId, int currentTick)
@@ -197,8 +202,8 @@ namespace VissimSimulator
 
                 int nextPossibleOnCall = rnd.Next(0, 10);
 
-                //let's say 10% of vehicles will have OnCall event
-                if (nextPossibleOnCall < 1)
+                //let's say 20% of vehicles will have OnCall event
+                if (nextPossibleOnCall < 2)
                 {
                     vEvent.AddOnCallEvent(currentTick);
                 }

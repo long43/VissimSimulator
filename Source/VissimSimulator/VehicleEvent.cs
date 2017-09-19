@@ -28,9 +28,9 @@ namespace VissimSimulator
         /// </summary>
         /// <param name="currentTicks">current time tick</param>
         /// <returns>Event</returns>
-        public Event GetActiveEvent(long currentTicks)
+        public IEnumerable<Event> GetActiveEvent(long currentTicks)
         {
-            return events.Values.Where(x => x.IsActive(currentTicks)).FirstOrDefault();
+            return events.Values.Where(x => x.IsActive(currentTicks));
         }
 
         /// <summary>
@@ -68,9 +68,10 @@ namespace VissimSimulator
         public void AddOnCallEvent(long currentTick)
         {
             Random rnd = new Random();
-            //set the timespan range. start tick will always be current range to 
-            long endTick = rnd.Next((int)currentTick + 60, 3600);
-            Event evet = new Event(EventType.OnCall, new VS.TimeSpan(currentTick, endTick));
+            //set the timespan range. start tick will always be current range to
+            long startTick = rnd.Next((int)currentTick + 60, 3600);
+            long endTick = startTick + rnd.Next(0, (3600 - (int)startTick));
+            Event evet = new Event(EventType.OnCall, new VS.TimeSpan(startTick, endTick));
             events.Add(evet.guid, evet);
         }
 
