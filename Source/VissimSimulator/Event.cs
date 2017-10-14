@@ -26,6 +26,8 @@ namespace VissimSimulator
         /// <param name="type">EventType</param>
         public Event(EventType type)
         {
+            guid = Guid.NewGuid();
+
             EventType = type;
 
             TimeSpan = new VS.TimeSpan(0, 3600);
@@ -38,9 +40,11 @@ namespace VissimSimulator
         /// <param name="timeSpan">TimeSpan</param>
         public Event(EventType type, TimeSpan timeSpan)
         {
+            guid = Guid.NewGuid();
+
             EventType = type;
 
-            TimeSpan = TimeSpan;
+            TimeSpan = timeSpan;
         }
 
         /// <summary>
