@@ -119,6 +119,10 @@ namespace VissimSimulator
                                 GenerateEvent(vehicleId.ToString(), currentTick);
                             }
                         }
+
+                        //randomly generate some cellular events that are not on vehicles
+                        GenerateCellularStaticEvents(currentTick);
+
                         //make the Vissim simulation move forward one tick
                         vissim.Simulation.RunSingleStep();
                     }
@@ -185,6 +189,37 @@ namespace VissimSimulator
                 }
             }
             yield return null;
+        }
+
+        private void GenerateCellularStaticEvents(int tick)
+        { 
+            foreach (Location lo in cellularNetwork.Locations)
+            {
+                foreach (CellTower cl in lo.Cells)
+                {
+                    //generate the events on cl level
+                    Random rnd = new Random();
+                    //get a random number
+                    int cellRandN = rnd.Next(0, 10);
+
+                    //20% of the cells will have random non-vehicular event
+                    if (cellRandN <= 2) 
+                    {
+                        //let's say 50% of them are power on events
+                        Event evt = null;
+                        if (rnd.Next(0, 10) <= 5) 
+                        {
+                            evt = new Event(EventType.PowerOn);
+                        }
+                        else 
+                        {
+                            evt = new Event(EventType.OnCall);
+                        }
+                        CellularTowerEvent cte = new CellularTowerEvent(new Guid().ToString(), lo.LocationId, cl.CellTowerId,  evt, tick);
+                        cellularTowerEvents.Add(cte);
+                    }
+                }
+            }
         }
 
         private void GenerateEvent(string vehicleId, int currentTick)
