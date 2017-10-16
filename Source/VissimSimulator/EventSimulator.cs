@@ -59,7 +59,7 @@ namespace VissimSimulator
             //initialize the cellular network
             cellularNetwork.LoadFromFile(CellLinkRelationFilePath, Delimiter);
 
-            CollectorWorker worker = new CollectorWorker(VissimEventsFilePath, cellularTowerEvents);
+            CollectorWorker worker = new CollectorWorker(VissimEventsFilePath, cellularTowerEvents, token);
             //collector task: collecting the data from cellular events
             Task collectorTask = Task.Factory.StartNew(() => worker.Run(), token);
 
@@ -173,32 +173,35 @@ namespace VissimSimulator
 
         private void GenerateCellularStaticEvents()
         {
-            foreach (Location lo in cellularNetwork.Locations)
+            while (!token.IsCancellationRequested)
             {
-                foreach (CellTower cl in lo.Cells)
+                foreach (Location lo in cellularNetwork.Locations)
                 {
-                    //20% of the cells will have random non-vehicular events
-                    //always assume each cell has 5000 cell phone users
-                    for (int i = 0; i < 5000; i++)
+                    foreach (CellTower cl in lo.Cells)
                     {
-                        //generate the events on cl level
-                        Random rnd = new Random();
-                        //get a random number
-                        int cellRandN = rnd.Next(0, 10);
-                        if (cellRandN <= 2)
+                        //20% of the cells will have random non-vehicular events
+                        //always assume each cell has 5000 cell phone users
+                        for (int i = 0; i < 5000; i++)
                         {
-                            //let's say 50% of them are power on events
-                            Event evt = null;
-                            if (rnd.Next(0, 10) <= 5)
+                            //generate the events on cl level
+                            Random rnd = new Random();
+                            //get a random number
+                            int cellRandN = rnd.Next(0, 10);
+                            if (cellRandN <= 2)
                             {
-                                evt = new Event(EventType.PowerOn);
+                                //let's say 50% of them are power on events
+                                Event evt = null;
+                                if (rnd.Next(0, 10) <= 5)
+                                {
+                                    evt = new Event(EventType.PowerOn);
+                                }
+                                else
+                                {
+                                    evt = new Event(EventType.OnCall);
+                                }
+                                CellularTowerEvent cte = new CellularTowerEvent("-" + i.ToString(), lo.LocationId, cl.CellTowerId, evt, currentTick);
+                                cellularTowerEvents.Add(cte);
                             }
-                            else
-                            {
-                                evt = new Event(EventType.OnCall);
-                            }
-                            CellularTowerEvent cte = new CellularTowerEvent("-" + i.ToString(), lo.LocationId, cl.CellTowerId, evt, currentTick);
-                            cellularTowerEvents.Add(cte);
                         }
                     }
                 }

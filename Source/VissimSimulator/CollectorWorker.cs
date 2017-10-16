@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Configuration;
@@ -10,9 +11,11 @@ namespace VissimSimulator
     {
         private string filePath;
         private BlockingCollection<CellularTowerEvent> cellularTowerEvents;
+        private CancellationToken token;
 
-        public CollectorWorker(string filePath, BlockingCollection<CellularTowerEvent> cellularTowerEvents)
+        public CollectorWorker(string filePath, BlockingCollection<CellularTowerEvent> cellularTowerEvents, CancellationToken token)
         {
+            this.token = token;
             this.filePath = filePath;
             this.cellularTowerEvents = cellularTowerEvents;
         }
@@ -21,9 +24,12 @@ namespace VissimSimulator
         {
             using (StreamWriter writer = new StreamWriter(filePath))
             {
-                foreach (CellularTowerEvent cEvent in cellularTowerEvents.GetConsumingEnumerable())
+                while (!token.IsCancellationRequested)
                 {
-                    Process(writer, cEvent);
+                    foreach (CellularTowerEvent cEvent in cellularTowerEvents.GetConsumingEnumerable())
+                    {
+                        Process(writer, cEvent);
+                    }   
                 }
             }
         }
