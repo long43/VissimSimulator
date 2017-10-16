@@ -24,13 +24,10 @@ namespace VissimSimulator
         {
             using (StreamWriter writer = new StreamWriter(filePath))
             {
-                while (!token.IsCancellationRequested)
+                foreach (CellularTowerEvent cEvent in cellularTowerEvents.GetConsumingEnumerable(token))
                 {
-                    foreach (CellularTowerEvent cEvent in cellularTowerEvents.GetConsumingEnumerable())
-                    {
-                        Process(writer, cEvent);
-                    }   
-                }
+                    Process(writer, cEvent);
+                } 
             }
         }
 
