@@ -18,6 +18,11 @@ namespace VissimSimulator
         private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang.inpx";
         private const char Delimiter = ',';
         private const long SimulationTicks = 3600;
+        
+        //task cancellation source
+        private CancellationTokenSource tokenSource;
+        //task cancellation token
+        private CancellationToken token;
 
         private int currentTick;
 
@@ -38,6 +43,8 @@ namespace VissimSimulator
         public EventSimulator()
         {
             currentTick = 0;
+            tokenSource = new CancellationTokenSource();
+            token = tokenSource.Token;
             cellularNetwork = new CellularNetwork();
             vehicleEvents = new Dictionary<string, VehicleEvent>();
             cellularTowerEvents = new BlockingCollection<CellularTowerEvent>();
@@ -53,17 +60,17 @@ namespace VissimSimulator
             cellularNetwork.LoadFromFile(CellLinkRelationFilePath, Delimiter);
 
             CollectorWorker worker = new CollectorWorker(VissimEventsFilePath, cellularTowerEvents);
-            Task collectorTask = Task.Factory.StartNew(() =>
-            {
-                worker.Run();
-            });
+            //collector task: collecting the data from cellular events
+            Task collectorTask = Task.Factory.StartNew(() => worker.Run(), token);
 
             //simulation thread: including vissim simulation, events generation and detection
-            Task simulator = Task.Factory.StartNew(() => Execute());
+            Task simulator = Task.Factory.StartNew(() => Execute(), token);
+
+            Task randomEventsGenerator = Task.Factory.StartNew(() => GenerateCellularStaticEvents(), token);
 
             try
             {
-                Task.WaitAll(simulator, collectorTask);
+                Task.WaitAll(simulator, collectorTask, randomEventsGenerator);
             }
             catch (Exception ex)
             {
@@ -102,14 +109,14 @@ namespace VissimSimulator
                     }
                 }
 
-                //randomly generate some cellular events that are not on vehicles
-                GenerateCellularStaticEvents(currentTick);
-
                 //make the Vissim simulation move forward one tick
                 vissim.Simulation.RunSingleStep();
 
                 Interlocked.Increment(ref currentTick);
             }
+
+            //set the cancellation token to stop all tasks
+            tokenSource.Cancel();
         }
 
         /// <summary>
@@ -164,7 +171,7 @@ namespace VissimSimulator
             yield return null;
         }
 
-        private void GenerateCellularStaticEvents(int tick)
+        private void GenerateCellularStaticEvents()
         {
             foreach (Location lo in cellularNetwork.Locations)
             {
@@ -190,7 +197,7 @@ namespace VissimSimulator
                             {
                                 evt = new Event(EventType.OnCall);
                             }
-                            CellularTowerEvent cte = new CellularTowerEvent("-" + i.ToString(), lo.LocationId, cl.CellTowerId, evt, tick);
+                            CellularTowerEvent cte = new CellularTowerEvent("-" + i.ToString(), lo.LocationId, cl.CellTowerId, evt, currentTick);
                             cellularTowerEvents.Add(cte);
                         }
                     }
