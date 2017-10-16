@@ -20,6 +20,17 @@ namespace VissimSimulator
             }
         }
 
+        public IList<string> Links
+        {
+            get 
+            { 
+                return (from location in network.Values
+                       from cell in network[location.LocationId].Cells
+                       from link in cell.Links
+                       select link).ToList();
+            }
+        }
+
         public CellularNetwork()
         {
             network = new Dictionary<string, Location>();
