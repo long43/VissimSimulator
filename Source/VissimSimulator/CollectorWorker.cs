@@ -13,9 +13,8 @@ namespace VissimSimulator
         private BlockingCollection<CellularTowerEvent> cellularTowerEvents;
         private CancellationToken token;
 
-        public CollectorWorker(string filePath, BlockingCollection<CellularTowerEvent> cellularTowerEvents, CancellationToken token)
+        public CollectorWorker(string filePath, BlockingCollection<CellularTowerEvent> cellularTowerEvents)
         {
-            this.token = token;
             this.filePath = filePath;
             this.cellularTowerEvents = cellularTowerEvents;
         }
@@ -24,7 +23,7 @@ namespace VissimSimulator
         {
             using (StreamWriter writer = new StreamWriter(filePath))
             {
-                foreach (CellularTowerEvent cEvent in cellularTowerEvents.GetConsumingEnumerable(token))
+                foreach (CellularTowerEvent cEvent in cellularTowerEvents.GetConsumingEnumerable())
                 {
                     Process(writer, cEvent);
                 } 

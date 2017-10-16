@@ -4,8 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-//using System.Configuration;
-//using System.Data.SqlClient;
+using VissimSimulator.Mock;
 //using VISSIMLIB;
 
 namespace VissimSimulator
@@ -60,7 +59,7 @@ namespace VissimSimulator
             //initialize the cellular network
             cellularNetwork.LoadFromFile(CellLinkRelationFilePath, Delimiter);
 
-            CollectorWorker worker = new CollectorWorker(VissimEventsFilePath, cellularTowerEvents, token);
+            CollectorWorker worker = new CollectorWorker(VissimEventsFilePath, cellularTowerEvents);
             //collector task: collecting the data from cellular events
             Task collectorTask = Task.Factory.StartNew(() => worker.Run(), token);
 
@@ -128,6 +127,9 @@ namespace VissimSimulator
 
             //set the cancellation token to stop all tasks
             tokenSource.Cancel();
+
+            //let the blockingqueue to know that we stopped adding new events so it will gracefully exit
+            cellularTowerEvents.CompleteAdding();
         }
 
         /// <summary>
