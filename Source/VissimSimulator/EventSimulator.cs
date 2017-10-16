@@ -2,10 +2,11 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 //using System.Configuration;
 //using System.Data.SqlClient;
-using VISSIMLIB;
+//using VISSIMLIB;
 
 namespace VissimSimulator
 {
@@ -17,6 +18,8 @@ namespace VissimSimulator
         private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang.inpx";
         private const char Delimiter = ',';
         private const long SimulationTicks = 3600;
+
+        private int currentTick;
 
         //the cellular network
         private CellularNetwork cellularNetwork = null;
@@ -34,36 +37,11 @@ namespace VissimSimulator
         #region public methods
         public EventSimulator()
         {
+            currentTick = 0;
             cellularNetwork = new CellularNetwork();
             vehicleEvents = new Dictionary<string, VehicleEvent>();
             cellularTowerEvents = new BlockingCollection<CellularTowerEvent>();
         }
-
-        /// <summary>
-        /// This method attempts to create the OUTPUT QRACLE table.
-        /// If will do nothing but print an error if the table already exists.
-        /// </summary>
-        //public void TryCreateTbale()
-        //{
-
-        //    using (SqlConnection con = new SqlConnection())
-        //    {
-        //        con.ConnectionString = ConfigurationManager.AppSettings["SqlConnectionString"];
-        //        con.Open();
-        //        try
-        //        {
-        //            using (SqlCommand command = new SqlCommand(
-        //                "CREATE TBALE OUTPUT1(LocationId INT, CellularTowerId INT, EventType TEXT, EventTimeSpan TEXT)", con))
-        //            {
-        //                command.ExecuteNonQuery();
-        //            }
-        //        }
-        //        catch
-        //        {
-        //            Console.WriteLine("Table already exists, or something wrong with the connection");
-        //        }
-        //    }
-        //}
 
         public void Run()
         {
@@ -73,69 +51,64 @@ namespace VissimSimulator
 
             //initialize the cellular network
             cellularNetwork.LoadFromFile(CellLinkRelationFilePath, Delimiter);
-            ///initialize the table
-            //TryCreateTbale();
-            //set up the collector threads. For now, only need one thread on this
-            //for now, we only need 1 worker to collect the event
 
-            using (StreamWriter writer = new StreamWriter(VissimEventsFilePath))
+            CollectorWorker worker = new CollectorWorker(VissimEventsFilePath, cellularTowerEvents);
+            Task collectorTask = Task.Factory.StartNew(() =>
             {
-                CollectorWorker worker = new CollectorWorker(writer);
-                Task collectorTask = Task.Factory.StartNew(() =>
-                {
-                    foreach (CellularTowerEvent cEvent in cellularTowerEvents.GetConsumingEnumerable())
-                    {
-                        worker.Process(cEvent);
-                    }
-                });
+                worker.Run();
+            });
 
-                //simulation thread: including vissim simulation, events generation and detection
-                Task simulator = Task.Factory.StartNew(() =>
+            //simulation thread: including vissim simulation, events generation and detection
+            Task simulator = Task.Factory.StartNew(() => Execute());
+
+            try
+            {
+                Task.WaitAll(simulator, collectorTask);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(string.Format("there are some exceptions happened: {0}", ex.Message));
+                throw ex;
+            }
+        }
+
+        public void Execute()
+        {
+            while (currentTick < SimulationTicks)
+            {
+                foreach (IVehicle vehicle in vissim.Net.Vehicles)
                 {
-                    for (int currentTick = 0; currentTick < SimulationTicks; currentTick++)
+                    //get the vehicle id+
+                    int vehicleId = (int)vehicle.AttValue["No"];
+                    //get the current vehicle link
+                    ILane lane = vehicle.Lane;
+                    string linkId = lane.AttValue["Link"];
+                    //Console.WriteLine(string.Format("vehicle {0} at link {1}", vehicleId, linkId));
+                    //first check if this vehicle has event
+                    if (vehicleEvents.ContainsKey(vehicleId.ToString()))
                     {
-                        foreach (IVehicle vehicle in vissim.Net.Vehicles)
+                        foreach (CellularTowerEvent cEvent in DetectEvent(vehicleId.ToString(), linkId, currentTick))
                         {
-                            //get the vehicle id+
-                            int vehicleId= (int)vehicle.AttValue["No"];
-                            //get the current vehicle link
-                            ILane lane = vehicle.Lane;
-                            string linkId = lane.AttValue["Link"];
-                            //Console.WriteLine(string.Format("vehicle {0} at link {1}", vehicleId, linkId));
-                            //first check if this vehicle has event
-                            if (vehicleEvents.ContainsKey(vehicleId.ToString()))
+                            if (cEvent != null)
                             {
-                                foreach (CellularTowerEvent cEvent in DetectEvent(vehicleId.ToString(), linkId, currentTick))
-                                {
-                                    if (cEvent != null)
-                                    {
-                                        cellularTowerEvents.Add(cEvent);
-                                    }
-                                }
-
-                            }
-                            else //if no vehicle event, that means this is new vehicle entering the vissim network
-                            {
-                                GenerateEvent(vehicleId.ToString(), currentTick);
+                                cellularTowerEvents.Add(cEvent);
                             }
                         }
 
-                        //randomly generate some cellular events that are not on vehicles
-                        GenerateCellularStaticEvents(currentTick);
-
-                        //make the Vissim simulation move forward one tick
-                        vissim.Simulation.RunSingleStep();
                     }
-                });
-                try
-                {
-                    Task.WaitAll(simulator, collectorTask);
+                    else //if no vehicle event, that means this is new vehicle entering the vissim network
+                    {
+                        GenerateEvent(vehicleId.ToString(), currentTick);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(string.Format("there are some exceptions happened: {0}", ex.Message));
-                    throw ex;
-                }
+
+                //randomly generate some cellular events that are not on vehicles
+                GenerateCellularStaticEvents(currentTick);
+
+                //make the Vissim simulation move forward one tick
+                vissim.Simulation.RunSingleStep();
+
+                Interlocked.Increment(ref currentTick);
             }
         }
 
@@ -192,7 +165,7 @@ namespace VissimSimulator
         }
 
         private void GenerateCellularStaticEvents(int tick)
-        { 
+        {
             foreach (Location lo in cellularNetwork.Locations)
             {
                 foreach (CellTower cl in lo.Cells)
@@ -203,19 +176,19 @@ namespace VissimSimulator
                     int cellRandN = rnd.Next(0, 10);
 
                     //20% of the cells will have random non-vehicular event
-                    if (cellRandN <= 2) 
+                    if (cellRandN <= 2)
                     {
                         //let's say 50% of them are power on events
                         Event evt = null;
-                        if (rnd.Next(0, 10) <= 5) 
+                        if (rnd.Next(0, 10) <= 5)
                         {
                             evt = new Event(EventType.PowerOn);
                         }
-                        else 
+                        else
                         {
                             evt = new Event(EventType.OnCall);
                         }
-                        CellularTowerEvent cte = new CellularTowerEvent(new Guid().ToString(), lo.LocationId, cl.CellTowerId,  evt, tick);
+                        CellularTowerEvent cte = new CellularTowerEvent(new Guid().ToString(), lo.LocationId, cl.CellTowerId, evt, tick);
                         cellularTowerEvents.Add(cte);
                     }
                 }

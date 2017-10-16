@@ -1,5 +1,4 @@
-﻿using VISSIMLIB;
-
+﻿
 namespace VissimSimulator
 {
     /// <summary>
