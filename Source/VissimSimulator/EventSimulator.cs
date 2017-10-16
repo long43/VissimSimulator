@@ -119,6 +119,22 @@ namespace VissimSimulator
                     }
                 }
 
+                //we should also check all pre-defined vehicle events
+                for (int i = 1; i < CellPhonePopulation; i++)
+                {
+                    int vehicleId = -1 * i;
+                    if (vehicleEvents.ContainsKey(vehicleId.ToString()))
+                    {
+                        foreach (CellularTowerEvent cEvent in DetectEvent(vehicleId.ToString(), null, currentTick))
+                        {
+                            if (cEvent != null)
+                            {
+                                cellularTowerEvents.Add(cEvent);
+                            }
+                        }
+                    }
+                }
+
                 //make the Vissim simulation move forward one tick
                 vissim.Simulation.RunSingleStep();
 
