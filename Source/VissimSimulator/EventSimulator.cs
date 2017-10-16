@@ -18,6 +18,7 @@ namespace VissimSimulator
         private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang.inpx";
         private const char Delimiter = ',';
         private const long SimulationTicks = 3600;
+        private const int CellPhonePopulation = 10000;
         
         //task cancellation source
         private CancellationTokenSource tokenSource;
@@ -66,11 +67,9 @@ namespace VissimSimulator
             //simulation thread: including vissim simulation, events generation and detection
             Task simulator = Task.Factory.StartNew(() => Execute(), token);
 
-            Task randomEventsGenerator = Task.Factory.StartNew(() => GenerateCellularStaticEvents(), token);
-
             try
             {
-                Task.WaitAll(simulator, collectorTask, randomEventsGenerator);
+                Task.WaitAll(simulator, collectorTask);
             }
             catch (Exception ex)
             {
@@ -81,6 +80,18 @@ namespace VissimSimulator
 
         public void Execute()
         {
+            //assume there will be 10k static cell phone users
+            //treat them as vehicles but not moving
+            IList<string> links = cellularNetwork.Links;
+            Random rnd = new Random();
+            for (int i = 1; i < CellPhonePopulation; i++)
+            {
+                int vehicleId = -1 * i;
+                //get a random number
+                int linkIndex = rnd.Next(0, links.Count - 1);
+                GenerateEvent(vehicleId.ToString(), currentTick, links[linkIndex]);
+            }
+
             while (currentTick < SimulationTicks)
             {
                 foreach (IVehicle vehicle in vissim.Net.Vehicles)
@@ -133,6 +144,15 @@ namespace VissimSimulator
         private IEnumerable<CellularTowerEvent> DetectEvent(string vehicleId, string linkId, long currentTick)
         {
             VehicleEvent vEvent = vehicleEvents[vehicleId];
+
+            if (string.IsNullOrEmpty(linkId))
+            {
+                linkId = vEvent.LinkId;
+            }
+            else 
+            {
+                vEvent.LinkId = linkId;
+            }
 
             //find out the active event on this vehicle
             foreach (Event evt in vEvent.GetActiveEvent(currentTick))
@@ -205,6 +225,31 @@ namespace VissimSimulator
                         }
                     }
                 }
+            }
+        }
+
+        private void GenerateEvent(string vehicleId, int currentTick, string linkId)
+        {
+            Random rnd = new Random();
+            //get a random number
+            int vehiclePossible = rnd.Next(0, 10);
+
+            //let's say 80% of vehicles will have PowerOn event
+            if (vehiclePossible <= 8)
+            {
+                //no vehicle event on this vehicle yet. Means this is a new vehicle in the vissim network
+                VehicleEvent vEvent = new VehicleEvent(vehicleId, linkId);
+                vEvent.AddPowerOnEvent();
+
+                int nextPossibleOnCall = rnd.Next(0, 10);
+
+                //let's say 20% of vehicles will have OnCall event
+                if (nextPossibleOnCall < 2)
+                {
+                    vEvent.AddOnCallEvent(currentTick);
+                }
+
+                vehicleEvents.Add(vEvent.VehicleId, vEvent);
             }
         }
 

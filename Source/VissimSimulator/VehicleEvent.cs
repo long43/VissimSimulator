@@ -14,12 +14,20 @@ namespace VissimSimulator
         #region public properties
         public string VehicleId { get; private set; }
 
+        public string LinkId { get; set; }
+
         #endregion //public properties
 
         #region public methods
         public VehicleEvent(string vehicleId)
         {
             VehicleId = vehicleId;
+        }
+
+        public VehicleEvent(string vehicleId, string linkId)
+        {
+            VehicleId = vehicleId;
+            LinkId = linkId;
         }
 
 
