@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Configuration;
 using System.Data.SqlClient;
@@ -7,11 +8,24 @@ namespace VissimSimulator
 {
     public class CollectorWorker
     {
-        private StreamWriter writer;
+        private string filePath;
+        private BlockingCollection<CellularTowerEvent> cellularTowerEvents;
 
-        public CollectorWorker(StreamWriter streamWriter)
+        public CollectorWorker(string filePath, BlockingCollection<CellularTowerEvent> cellularTowerEvents)
         {
-            writer = streamWriter;
+            this.filePath = filePath;
+            this.cellularTowerEvents = cellularTowerEvents;
+        }
+
+        public void Run()
+        {
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                foreach (CellularTowerEvent cEvent in cellularTowerEvents.GetConsumingEnumerable())
+                {
+                    Process(writer, cEvent);
+                }
+            }
         }
 
         /// <summary>
@@ -21,11 +35,11 @@ namespace VissimSimulator
         /// 2. Do some aggregation that might be helpful for the research
         /// </summary>
         /// <param name="evt"></param>
-        public void Process(CellularTowerEvent evt)
+        public void Process(StreamWriter writer, CellularTowerEvent evt)
         {
             string eventType = Convert.ToString(evt.Event.EventType);
             long eventTimeSpan = evt.CurrentTick;
-            AddEvent(evt.IMSI, evt.LocationId, evt.CellularTowerId, eventType, eventTimeSpan);
+            AddEvent(writer, evt.IMSI, evt.LocationId, evt.CellularTowerId, eventType, eventTimeSpan);
         }
 
         /// <summary>
@@ -66,7 +80,7 @@ namespace VissimSimulator
         /// <param name="cellularTowerId">The cell id of the cell station.</param>
         /// <param name="eventType">The type of the event.</param>
         /// <param name="eventTimestamp">The time of the event when it occurs.</param>
-        public void AddEvent(string IMSI, string locationId, string cellularTowerId, string eventType, long eventTimeTick)
+        public void AddEvent(StreamWriter writer, string IMSI, string locationId, string cellularTowerId, string eventType, long eventTimeTick)
         {
             Console.WriteLine(string.Format("{0},{1},{2},{3},{4}", IMSI, locationId, cellularTowerId, eventType, eventTimeTick));
             writer.WriteLine(string.Format("{0},{1},{2},{3},{4}", IMSI, locationId, cellularTowerId, eventType, eventTimeTick));

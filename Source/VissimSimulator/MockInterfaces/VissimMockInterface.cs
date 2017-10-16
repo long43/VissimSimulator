@@ -1,36 +1,60 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Text;
-//using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-//namespace VissimSimulator
-//{
-//    public interface IVissim 
-//    {
-//        IVissimNet Net { get; }
+namespace VissimSimulator
+{
+    public interface IVissim
+    {
+        IVissimNet Net { get; }
 
-//        void LoadNet();
+        void LoadNet(string path, bool runBackground);
 
-//        void Exit();
-//    }
+        void Exit();
+    }
 
-//    public class Vissim : IVissim
-//    {
-//        public IVissimNet Net { get { return null; } }
+    public class Vissim : IVissim
+    {
+        public IVissimNet Net { get { return null; } }
 
-//        public void LoadNet() { }
+        public ISimulation Simulation;
 
-//        public void Exit() { }
-//    }
+        public void LoadNet(string path, bool runBackground) { }
 
-//    public interface IVissimNet
-//    {
-//        IList<IVehicle> Vehicles { get; }
-//    }
+        public void Exit() { }
+    }
 
-//    public interface IVehicle
-//    {
-//        string Id { get; }
-//    }
-//}
+    public interface ISimulation
+    {
+        void RunSingleStep();
+    }
+
+    public class Simulation : ISimulation
+    {
+        public void RunSingleStep()
+        {
+ 
+        }
+    }
+
+    public interface IVissimNet
+    {
+        IList<IVehicle> Vehicles { get; }
+    }
+
+    public interface IVehicle
+    {
+        string Id { get; }
+
+        IDictionary<string, object> AttValue { get; }
+
+        ILane Lane { get; }
+    }
+
+    public interface ILane
+    {
+        IDictionary<string, string> AttValue { get; }
+    }
+}
