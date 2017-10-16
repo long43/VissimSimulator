@@ -170,26 +170,29 @@ namespace VissimSimulator
             {
                 foreach (CellTower cl in lo.Cells)
                 {
-                    //generate the events on cl level
-                    Random rnd = new Random();
-                    //get a random number
-                    int cellRandN = rnd.Next(0, 10);
-
-                    //20% of the cells will have random non-vehicular event
-                    if (cellRandN <= 2)
+                    //20% of the cells will have random non-vehicular events
+                    //always assume each cell has 5000 cell phone users
+                    for (int i = 0; i < 5000; i++)
                     {
-                        //let's say 50% of them are power on events
-                        Event evt = null;
-                        if (rnd.Next(0, 10) <= 5)
+                        //generate the events on cl level
+                        Random rnd = new Random();
+                        //get a random number
+                        int cellRandN = rnd.Next(0, 10);
+                        if (cellRandN <= 2)
                         {
-                            evt = new Event(EventType.PowerOn);
+                            //let's say 50% of them are power on events
+                            Event evt = null;
+                            if (rnd.Next(0, 10) <= 5)
+                            {
+                                evt = new Event(EventType.PowerOn);
+                            }
+                            else
+                            {
+                                evt = new Event(EventType.OnCall);
+                            }
+                            CellularTowerEvent cte = new CellularTowerEvent("-" + i.ToString(), lo.LocationId, cl.CellTowerId, evt, tick);
+                            cellularTowerEvents.Add(cte);
                         }
-                        else
-                        {
-                            evt = new Event(EventType.OnCall);
-                        }
-                        CellularTowerEvent cte = new CellularTowerEvent(new Guid().ToString(), lo.LocationId, cl.CellTowerId, evt, tick);
-                        cellularTowerEvents.Add(cte);
                     }
                 }
             }
