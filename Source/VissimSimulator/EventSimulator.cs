@@ -163,13 +163,15 @@ namespace VissimSimulator
         {
             VehicleEvent vEvent = vehicleEvents[vehicleId];
 
+            //if the linkId is null, it means the vehicle event is pre-defined (non-vehicular event)
             if (string.IsNullOrEmpty(linkId))
             {
-                linkId = vEvent.LinkId;
+                linkId = vEvent.CurLinkId;
             }
             else 
             {
-                vEvent.LinkId = linkId;
+                vEvent.PreLinkId = vEvent.CurLinkId;
+                vEvent.CurLinkId = linkId;
             }
 
             //find out the active event on this vehicle
@@ -179,26 +181,37 @@ namespace VissimSimulator
                 if (evt != null)
                 {
                     ///current time.
-                    Location curlocation = null;
+                    Location curLocation = null;
                     CellTower curCell = null;
+                    Location preLocation = null;
+                    CellTower preCell = null;
                     switch (evt.EventType)
                     {
                         case EventType.PowerOn: //this is a LU event
-                            curlocation = cellularNetwork.FindLocationByLinkId(linkId);
-                            curCell = cellularNetwork.FindCellTowerByLinkId(linkId);
-                            if (curlocation != null && curCell != null)
+                            curLocation = cellularNetwork.FindLocationByLinkId(vEvent.CurLinkId);
+                            curCell = cellularNetwork.FindCellTowerByLinkId(vEvent.CurLinkId);
+
+                            preLocation = cellularNetwork.FindLocationByLinkId(vEvent.PreLinkId);
+                            preCell = cellularNetwork.FindCellTowerByLinkId(vEvent.PreLinkId);
+
+                            if (curLocation != null && curCell != null && 
+                                preLocation != null && preCell != null &&
+                                !curCell.Equals(preCell))
                             {
                                 //for now just use vechileId to represnet IMSI
-                                yield return new CellularTowerEvent(vehicleId, curlocation.LocationId, curCell.CellTowerId, evt, currentTick);
+                                yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation.LocationId, preCell.CellTowerId, evt, currentTick);
                             }
                             break;
                         case EventType.OnCall: //this is a hand-off event
-                            curlocation = cellularNetwork.FindLocationByLinkId(linkId);
+                            curLocation = cellularNetwork.FindLocationByLinkId(linkId);
                             curCell = cellularNetwork.FindCellTowerByLinkId(linkId);
-                            if (curlocation != null && curCell != null)
+
+                            preLocation = cellularNetwork.FindLocationByLinkId(vEvent.PreLinkId);
+                            preCell = cellularNetwork.FindCellTowerByLinkId(vEvent.PreLinkId);
+                            if (curLocation != null && curCell != null && !curLocation.Equals(preLocation))
                             {
                                 //for now just use vechileId to represnet IMSI
-                                yield return new CellularTowerEvent(vehicleId, curlocation.LocationId, curCell.CellTowerId, evt, currentTick);
+                                yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation.LocationId, preCell.CellTowerId, evt, currentTick);
                             }
                             break;
                         default:
@@ -237,7 +250,7 @@ namespace VissimSimulator
                                 {
                                     evt = new Event(EventType.OnCall);
                                 }
-                                CellularTowerEvent cte = new CellularTowerEvent("-" + i.ToString(), lo.LocationId, cl.CellTowerId, evt, currentTick);
+                                CellularTowerEvent cte = new CellularTowerEvent("-" + i.ToString(), lo.LocationId, cl.CellTowerId, lo.LocationId, cl.CellTowerId, evt, currentTick);
                                 cellularTowerEvents.Add(cte);
                             }
                         }
