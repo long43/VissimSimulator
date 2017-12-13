@@ -22,5 +22,11 @@ namespace VissimSimulator
         {
             Links.Add(linkId);
         }
+
+        public override bool Equals(object obj)
+        {
+            CellTower cell = obj as CellTower;
+            return this.CellTowerId.Equals(cell.CellTowerId);
+        }
     }
 }

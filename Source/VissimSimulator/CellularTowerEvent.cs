@@ -6,8 +6,10 @@ namespace VissimSimulator
     {
         #region public properties
         public string IMSI { private set; get; }
-        public string LocationId { private set; get; }
-        public string CellularTowerId { private set; get; }
+        public string CurLocationId { private set; get; }
+        public string CurCellularTowerId { private set; get; }
+        public string PreLocationId { private set; get; }
+        public string PreCellularTowerId { private set; get; }
         public Event Event { private set; get; }
         public long CurrentTick { private set; get; }
         #endregion //public properties 
@@ -19,7 +21,7 @@ namespace VissimSimulator
         /// <returns>True if it's LU event, otherwise return false</returns>
         public bool IsLocationUpdate()
         {
-            return string.IsNullOrEmpty(CellularTowerId);
+            return string.IsNullOrEmpty(CurCellularTowerId);
         }
 
         /// <summary>
@@ -37,11 +39,19 @@ namespace VissimSimulator
         /// <param name="id"></param>
         /// <param name="evt"></param>
         /// <param name="tick"></param>
-        public CellularTowerEvent(string imsi, string locationId, string cellularTowerId, Event evt, long tick)
+        public CellularTowerEvent(string imsi, 
+                                  string curLocationId, 
+                                  string curCellularTowerId,
+                                  string preLocationId,
+                                  string preCellularTowerId,
+                                  Event evt, 
+                                  long tick)
         {
             IMSI = imsi;
-            CellularTowerId = cellularTowerId;
-            LocationId = locationId;
+            CurCellularTowerId = CurCellularTowerId;
+            CurLocationId = CurLocationId;
+            PreCellularTowerId = preCellularTowerId;
+            PreLocationId = preLocationId;
             Event = evt;
             CurrentTick = tick;
         }

@@ -14,7 +14,9 @@ namespace VissimSimulator
         #region public properties
         public string VehicleId { get; private set; }
 
-        public string LinkId { get; set; }
+        public string CurLinkId { get; set; }
+
+        public string PreLinkId { get; set; }
 
         #endregion //public properties
 
@@ -27,7 +29,14 @@ namespace VissimSimulator
         public VehicleEvent(string vehicleId, string linkId)
         {
             VehicleId = vehicleId;
-            LinkId = linkId;
+            CurLinkId = linkId;
+        }
+
+        public VehicleEvent(string vehicleId, string curLinkId, string preLinkId)
+        {
+            VehicleId = vehicleId;
+            CurLinkId = curLinkId;
+            PreLinkId = preLinkId;
         }
 
 

@@ -41,7 +41,7 @@ namespace VissimSimulator
         {
             string eventType = Convert.ToString(evt.Event.EventType);
             long eventTimeSpan = evt.CurrentTick;
-            AddEvent(writer, evt.IMSI, evt.LocationId, evt.CellularTowerId, eventType, eventTimeSpan);
+            AddEvent(writer, evt.IMSI, evt.CurLocationId, evt.CurCellularTowerId, evt.PreLocationId, evt.PreCellularTowerId, eventType, eventTimeSpan);
         }
 
         /// <summary>
@@ -82,10 +82,11 @@ namespace VissimSimulator
         /// <param name="cellularTowerId">The cell id of the cell station.</param>
         /// <param name="eventType">The type of the event.</param>
         /// <param name="eventTimestamp">The time of the event when it occurs.</param>
-        public void AddEvent(StreamWriter writer, string IMSI, string locationId, string cellularTowerId, string eventType, long eventTimeTick)
+        public void AddEvent(StreamWriter writer, string IMSI, string curLocationId, string curCellularTowerId, 
+                             string preLocationId, string preCellularTowerId, string eventType, long eventTimeTick)
         {
-            Console.WriteLine(string.Format("{0},{1},{2},{3},{4}", IMSI, locationId, cellularTowerId, eventType, eventTimeTick));
-            writer.WriteLine(string.Format("{0},{1},{2},{3},{4}", IMSI, locationId, cellularTowerId, eventType, eventTimeTick));
+            Console.WriteLine(string.Format("{0},{1},{2},{3},{4},{5},{6}", IMSI, curLocationId, curCellularTowerId, preLocationId, preCellularTowerId, eventType, eventTimeTick));
+            writer.WriteLine(string.Format("{0},{1},{2},{3},{4},{5},{6}", IMSI, curLocationId, curCellularTowerId, preLocationId, preCellularTowerId, eventType, eventTimeTick));
         }
     }
 }

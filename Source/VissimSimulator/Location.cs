@@ -62,6 +62,12 @@ namespace VissimSimulator
         {
             cellTowers.Add(tower.CellTowerId, tower);
         }
+
+        public override bool Equals(object obj)
+        {
+            Location location = obj as Location;
+            return this.LocationId.Equals(location.LocationId);
+        }
         #endregion //public methods
     }
 }
