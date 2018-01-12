@@ -58,9 +58,9 @@ namespace VissimSimulator
         /// Add a cell tower to the location
         /// </summary>
         /// <param name="tower">CellTower</param>
-        public void AddCellTower(CellTower tower)
+        public void AddCellTower(CellTower cell)
         {
-            cellTowers.Add(tower.CellTowerId, tower);
+            cellTowers.Add(cell.CellTowerId, cell);
         }
 
         public override bool Equals(object obj)
