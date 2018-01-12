@@ -32,9 +32,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Oracle.DataAccess">
-      <HintPath>library\Oracle.DataAccess.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -51,6 +48,7 @@
     <Compile Include="CollectorWorker.cs" />
     <Compile Include="Event.cs" />
     <Compile Include="EventSimulator.cs" />
+    <Compile Include="Link.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="MockInterfaces\VissimMockInterface.cs" />
     <Compile Include="Program.cs" />
@@ -59,6 +57,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="input\Taicang_Major_Cells.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="input\Taicang_Major_Cell_Link_Related.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="input\Taicang_Major_Cell_Link_Related_Original.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="input\Taicang_Major_Links.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="input\Taicang_Major_Link_Cell.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="VISSIMLIB">

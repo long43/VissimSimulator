@@ -20,14 +20,24 @@ namespace VissimSimulator
             }
         }
 
-        public IList<string> Links
+        public IDictionary<string, Link> Links
         {
             get 
-            { 
+            {
                 return (from location in network.Values
-                       from cell in network[location.LocationId].Cells
-                       from link in cell.Links
-                       select link).ToList();
+                        from cell in network[location.LocationId].Cells
+                        from link in cell.Links.Values
+                        select link).ToDictionary(x => x.LinkId);
+            }
+        }
+
+        public IDictionary<string, CellTower> Cells
+        {
+            get
+            {
+                return (from location in network.Values
+                        from cell in network[location.LocationId].Cells
+                        select cell).ToDictionary(x => x.CellTowerId);
             }
         }
 
@@ -68,7 +78,7 @@ namespace VissimSimulator
                         CellTower cell = new CellTower();
                         cell.CellTowerId = cellId;
                         //if the cell is a new cell, then the link must be a new link
-                        cell.Links.Add(linkId);
+                        cell.AddLink(linkId);
 
                         location.AddCellTower(cell);
                         //add the location to the cellular network
@@ -85,7 +95,7 @@ namespace VissimSimulator
                             CellTower cell = location.GetCell(cellId);
 
                             //check if link exists, most likely it doesn't exist otherwise the file is corrupted
-                            if (cell.Links.Contains(linkId))
+                            if (cell.Links.ContainsKey(linkId))
                             {
                                 throw new Exception("the link is already exists");
                             }
@@ -94,8 +104,9 @@ namespace VissimSimulator
                         }
                         else //if cell doesn't pre exist
                         {
-                            CellTower cell = new CellTower(cellId);
+                            CellTower cell = new CellTower(cellId, locationId);
                             cell.AddLink(linkId);
+                            location.AddCellTower(cell);
                         }
                     }
                 }
@@ -131,43 +142,7 @@ namespace VissimSimulator
             return network.ContainsKey(locationId);
         }
 
-        /// <summary>
-        /// Find all the links covered by a given location
-        /// </summary>
-        /// <param name="locationId">location id</param>
-        /// <returns>Enumeration of the link ids</returns>
-        public IEnumerable<string> FindLinksByLocationId(string locationId)
-        {
-            return from cell in network[locationId].Cells
-                   from link in cell.Links
-                   select link;
-        }
-
-        /// <summary>
-        /// Find all the cells covered by a given location
-        /// </summary>
-        /// <param name="locationId">location id</param>
-        /// <returns>Enumeration of the cell towers</returns>
-        public IEnumerable<CellTower> FindCellTowersByLocationId(string locationId)
-        {
-            return from cell in network[locationId].Cells
-                   select cell;
-        }
-
-        /// <summary>
-        /// Find all links covered by a given cell
-        /// </summary>
-        /// <param name="cellId">cell id</param>
-        /// <returns>Enumeration of the link ids</returns>
-        public IEnumerable<string> FindLinksByCellId(string cellId)
-        {
-            return from location in network.Values
-                   from cell in location.Cells
-                   from link in cell.Links
-                   where cell.CellTowerId == cellId
-                   select link;
-        }
-        
+       
         /// <summary>
         /// Find the location that cover a given link. In theory, a link can only be covered by one location
         /// If there are multiple locations that covers a link, then it must be something wrong in the network
@@ -176,10 +151,14 @@ namespace VissimSimulator
         /// <returns>Location</returns>
         public Location FindLocationByLinkId(string linkId)
         {
-            return (from location in network.Values
-                    from cell in location.Cells
-                   where cell.Links.Contains(linkId)
-                   select location).FirstOrDefault();
+            if (Links.ContainsKey(linkId))
+            {
+                if (Cells.ContainsKey(Links[linkId].CellId))
+                {
+                    return GetLocation(Cells[Links[linkId].CellId].LocationId);
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -189,11 +168,15 @@ namespace VissimSimulator
         /// <param name="linkId">link id</param>
         /// <returns>CellTower</returns>
         public CellTower FindCellTowerByLinkId(string linkId)
-        { 
-            return (from location in network.Values
-                    from cell in location.Cells
-                    where cell.Links.Contains(linkId)
-                    select cell).FirstOrDefault();
+        {
+            if (Links.ContainsKey(linkId))
+            {
+                if (Cells.ContainsKey(Links[linkId].CellId))
+                {
+                    return Cells[Links[linkId].CellId];
+                }
+            }
+            return null;
         }
 
         /// <summary>

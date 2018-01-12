@@ -11,7 +11,6 @@ namespace VissimSimulator
     {
         private string filePath;
         private BlockingCollection<CellularTowerEvent> cellularTowerEvents;
-        private CancellationToken token;
 
         public CollectorWorker(string filePath, BlockingCollection<CellularTowerEvent> cellularTowerEvents)
         {

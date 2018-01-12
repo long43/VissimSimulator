@@ -4,23 +4,26 @@ namespace VissimSimulator
 {
     public class CellTower
     {
+        public string LocationId { get; set; }
         public string CellTowerId { get; set; }
 
-        public HashSet<string> Links { get; private set; }
+        public Dictionary<string, Link> Links { get; private set; }
 
         public CellTower()
         {
-            Links = new HashSet<string>();
+            Links = new Dictionary<string, Link>();
         }
 
-        public CellTower(string cellId) : this()
+        public CellTower(string cellId, string locationId) : this()
         {
+            LocationId = locationId;
             CellTowerId = cellId;
         }
 
         public void AddLink(string linkId)
         {
-            Links.Add(linkId);
+            Link link = new Link(linkId, this.CellTowerId);
+            Links.Add(linkId, link);
         }
 
         public override bool Equals(object obj)

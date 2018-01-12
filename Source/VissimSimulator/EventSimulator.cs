@@ -1,5 +1,5 @@
 ﻿using System;
-using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -12,8 +12,8 @@ namespace VissimSimulator
     public class EventSimulator
     {
         #region private fields
-        private const string CellLinkRelationFilePath = @"C:\Users\Student\Desktop\VissimSimulator\Source\VissimSimulator\input\Taicang_Major_Cell_Link_Related.csv";
-        private const string VissimEventsFilePath = @"C:\Users\Student\Desktop\VissimSimulator\Source\VissimSimulator\output\VehicleEvents.csv";
+        private const string CellLinkRelationFilePath = @".\input\Taicang_Major_Cell_Link_Related.csv";
+        private const string VissimEventsFilePath = @".\VehicleEvents.csv";
         private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang.inpx";
         private const char Delimiter = ',';
         private const long SimulationTicks = 3600;
@@ -52,9 +52,9 @@ namespace VissimSimulator
 
         public void Run()
         {
-            vissim = new Vissim();
-            ///Load Vissim net work
-            vissim.LoadNet(VissimSimulatorFilePath, false);
+            //vissim = new Vissim();
+            /////Load Vissim net work
+            //vissim.LoadNet(VissimSimulatorFilePath, false);
 
             //initialize the cellular network
             cellularNetwork.LoadFromFile(CellLinkRelationFilePath, Delimiter);
@@ -81,14 +81,14 @@ namespace VissimSimulator
         {
             //assume there will be 10k static cell phone users
             //treat them as vehicles but not moving
-            IList<string> links = cellularNetwork.Links;
+            IList<Link> links = cellularNetwork.Links.Values.ToList();
             Random rnd = new Random();
             for (int i = 1; i < CellPhonePopulation; i++)
             {
                 int vehicleId = -1 * i;
                 //get a random number
                 int linkIndex = rnd.Next(0, links.Count - 1);
-                GenerateEvent(vehicleId.ToString(), currentTick, links[linkIndex]);
+                GenerateEvent(vehicleId.ToString(), currentTick, links[linkIndex].LinkId);
             }
 
             while (currentTick < SimulationTicks)
