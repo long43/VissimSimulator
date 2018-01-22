@@ -48,8 +48,8 @@ namespace VissimSimulator
                                   long tick)
         {
             IMSI = imsi;
-            CurCellularTowerId = CurCellularTowerId;
-            CurLocationId = CurLocationId;
+            CurCellularTowerId = curCellularTowerId;
+            CurLocationId = curLocationId;
             PreCellularTowerId = preCellularTowerId;
             PreLocationId = preLocationId;
             Event = evt;

@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using VissimSimulator.Mock;
-//using VISSIMLIB;
+//using VissimSimulator.Mock;
+using VISSIMLIB;
 
 namespace VissimSimulator
 {
@@ -52,9 +52,9 @@ namespace VissimSimulator
 
         public void Run()
         {
-            //vissim = new Vissim();
-            /////Load Vissim net work
-            //vissim.LoadNet(VissimSimulatorFilePath, false);
+            vissim = new Vissim();
+            //Load Vissim net work
+            vissim.LoadNet(VissimSimulatorFilePath, false);
 
             //initialize the cellular network
             cellularNetwork.LoadFromFile(CellLinkRelationFilePath, Delimiter);
@@ -81,14 +81,20 @@ namespace VissimSimulator
         {
             //assume there will be 10k static cell phone users
             //treat them as vehicles but not moving
-            IList<Link> links = cellularNetwork.Links.Values.ToList();
-            Random rnd = new Random();
-            for (int i = 1; i < CellPhonePopulation; i++)
+            //IList<Link> links = cellularNetwork.Links.Values.ToList();
+            //Random rnd = new Random();
+            //for (int i = 1; i < CellPhonePopulation; i++)
+            //{
+            //    int vehicleId = -1 * i;
+            //    //get a random number
+            //    int linkIndex = rnd.Next(0, links.Count - 1);
+            //    GenerateEvent(vehicleId.ToString(), currentTick, links[linkIndex].LinkId);
+            //}
+
+            //warm up
+            for (int i = 0; i < 1800; i++)
             {
-                int vehicleId = -1 * i;
-                //get a random number
-                int linkIndex = rnd.Next(0, links.Count - 1);
-                GenerateEvent(vehicleId.ToString(), currentTick, links[linkIndex].LinkId);
+                vissim.Simulation.RunSingleStep();
             }
 
             while (currentTick < SimulationTicks)
@@ -120,25 +126,27 @@ namespace VissimSimulator
                 }
 
                 //we should also check all pre-defined vehicle events
-                for (int i = 1; i < CellPhonePopulation; i++)
-                {
-                    int vehicleId = -1 * i;
-                    if (vehicleEvents.ContainsKey(vehicleId.ToString()))
-                    {
-                        foreach (CellularTowerEvent cEvent in DetectEvent(vehicleId.ToString(), null, currentTick))
-                        {
-                            if (cEvent != null)
-                            {
-                                cellularTowerEvents.Add(cEvent);
-                            }
-                        }
-                    }
-                }
+                //for (int i = 1; i < CellPhonePopulation; i++)
+                //{
+                //    int vehicleId = -1 * i;
+                //    if (vehicleEvents.ContainsKey(vehicleId.ToString()))
+                //    {
+                //        foreach (CellularTowerEvent cEvent in DetectEvent(vehicleId.ToString(), null, currentTick))
+                //        {
+                //            if (cEvent != null)
+                //            {
+                //                cellularTowerEvents.Add(cEvent);
+                //            }
+                //        }
+                //    }
+                //}
 
                 //make the Vissim simulation move forward one tick
-                vissim.Simulation.RunSingleStep();
-
-                Interlocked.Increment(ref currentTick);
+                for (int i = 0; i < 5; i++)
+                {
+                    vissim.Simulation.RunSingleStep();
+                    Interlocked.Increment(ref currentTick);
+                }
             }
 
             //set the cancellation token to stop all tasks
@@ -185,37 +193,18 @@ namespace VissimSimulator
                     CellTower curCell = null;
                     Location preLocation = null;
                     CellTower preCell = null;
-                    switch (evt.EventType)
+                    curLocation = cellularNetwork.FindLocationByLinkId(vEvent.CurLinkId);
+                    curCell = cellularNetwork.FindCellTowerByLinkId(vEvent.CurLinkId);
+
+                    preLocation = cellularNetwork.FindLocationByLinkId(vEvent.PreLinkId);
+                    preCell = cellularNetwork.FindCellTowerByLinkId(vEvent.PreLinkId);
+
+                    if (curLocation != null && curCell != null && 
+                        preLocation != null && preCell != null &&
+                        !curCell.Equals(preCell))
                     {
-                        case EventType.PowerOn: //this is a LU event
-                            curLocation = cellularNetwork.FindLocationByLinkId(vEvent.CurLinkId);
-                            curCell = cellularNetwork.FindCellTowerByLinkId(vEvent.CurLinkId);
-
-                            preLocation = cellularNetwork.FindLocationByLinkId(vEvent.PreLinkId);
-                            preCell = cellularNetwork.FindCellTowerByLinkId(vEvent.PreLinkId);
-
-                            if (curLocation != null && curCell != null && 
-                                preLocation != null && preCell != null &&
-                                !curCell.Equals(preCell))
-                            {
-                                //for now just use vechileId to represnet IMSI
-                                yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation.LocationId, preCell.CellTowerId, evt, currentTick);
-                            }
-                            break;
-                        case EventType.OnCall: //this is a hand-off event
-                            curLocation = cellularNetwork.FindLocationByLinkId(linkId);
-                            curCell = cellularNetwork.FindCellTowerByLinkId(linkId);
-
-                            preLocation = cellularNetwork.FindLocationByLinkId(vEvent.PreLinkId);
-                            preCell = cellularNetwork.FindCellTowerByLinkId(vEvent.PreLinkId);
-                            if (curLocation != null && curCell != null && !curLocation.Equals(preLocation))
-                            {
-                                //for now just use vechileId to represnet IMSI
-                                yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation.LocationId, preCell.CellTowerId, evt, currentTick);
-                            }
-                            break;
-                        default:
-                            break;
+                        //for now just use vechileId to represnet IMSI
+                        yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation.LocationId, preCell.CellTowerId, evt, currentTick);
                     }
                 }
             }
