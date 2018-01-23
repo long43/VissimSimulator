@@ -16,7 +16,7 @@ namespace VissimSimulator
         private const string VissimEventsFilePath = @".\VehicleEvents.csv";
         private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang.inpx";
         private const char Delimiter = ',';
-        private const long SimulationTicks = 3600;
+        private const long SimulationTicks = 7200;
         private const int CellPhonePopulation = 10000;
         
         //task cancellation source
@@ -92,10 +92,10 @@ namespace VissimSimulator
             //}
 
             //warm up
-            for (int i = 0; i < 1800; i++)
-            {
-                vissim.Simulation.RunSingleStep();
-            }
+            //for (int i = 0; i < 1800; i++)
+            //{
+            //    vissim.Simulation.RunSingleStep();
+            //}
 
             while (currentTick < SimulationTicks)
             {
@@ -142,7 +142,7 @@ namespace VissimSimulator
                 //}
 
                 //make the Vissim simulation move forward one tick
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 30; i++)
                 {
                     vissim.Simulation.RunSingleStep();
                     Interlocked.Increment(ref currentTick);
@@ -199,13 +199,26 @@ namespace VissimSimulator
                     preLocation = cellularNetwork.FindLocationByLinkId(vEvent.PreLinkId);
                     preCell = cellularNetwork.FindCellTowerByLinkId(vEvent.PreLinkId);
 
-                    if (curLocation != null && curCell != null && 
-                        preLocation != null && preCell != null &&
-                        !curCell.Equals(preCell))
+                    switch (evt.EventType)
                     {
-                        //for now just use vechileId to represnet IMSI
-                        yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation.LocationId, preCell.CellTowerId, evt, currentTick);
+                        case EventType.OnCall:
+                            //for any oncall events, just return the location
+                            yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation.LocationId, preCell.CellTowerId, evt, currentTick);
+                            break;
+                        case EventType.PowerOn:
+                            if (curLocation != null && curCell != null &&
+                                preLocation != null && preCell != null &&
+                                !curCell.Equals(preCell))
+                            {
+                                //for now just use vechileId to represnet IMSI
+                                yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation.LocationId, preCell.CellTowerId, evt, currentTick);
+                            }
+                            break;
+                        default:
+                            break;
                     }
+
+
                 }
             }
             yield return null;
@@ -288,8 +301,8 @@ namespace VissimSimulator
 
                 int nextPossibleOnCall = rnd.Next(0, 10);
 
-                //let's say 20% of vehicles will have OnCall event
-                if (nextPossibleOnCall < 2)
+                //let's say 40% of vehicles will have OnCall event
+                if (nextPossibleOnCall < 4)
                 {
                     vEvent.AddOnCallEvent(currentTick);
                 }

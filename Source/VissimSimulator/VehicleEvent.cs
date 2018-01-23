@@ -86,9 +86,9 @@ namespace VissimSimulator
         {
             Random rnd = new Random();
             //set the timespan range. start tick will always be current range to
-            long startTick = rnd.Next((int)currentTick + 60, 3600);
-            long endTick = startTick + rnd.Next(0, (3600 - (int)startTick));
-            Event evet = new Event(EventType.OnCall, new VS.TimeSpan(startTick, endTick));
+            long startTick = rnd.Next((int)currentTick / 30 + 2, 240);
+            long endTick = startTick + rnd.Next(60, (240 - (int)startTick));
+            Event evet = new Event(EventType.OnCall, new VS.TimeSpan(startTick * 30, endTick * 30));
             events.Add(evet.guid, evet);
         }
 
