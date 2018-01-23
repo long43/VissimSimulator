@@ -75,8 +75,7 @@ namespace VissimSimulator
                     {
                         location = new Location(locationId);
                         //if the Location is new location, then the cell must be new cell
-                        CellTower cell = new CellTower();
-                        cell.CellTowerId = cellId;
+                        CellTower cell = new CellTower(cellId, locationId);
                         //if the cell is a new cell, then the link must be a new link
                         cell.AddLink(linkId);
 
@@ -151,7 +150,7 @@ namespace VissimSimulator
         /// <returns>Location</returns>
         public Location FindLocationByLinkId(string linkId)
         {
-            if (Links.ContainsKey(linkId))
+            if (!string.IsNullOrEmpty(linkId) && Links.ContainsKey(linkId))
             {
                 if (Cells.ContainsKey(Links[linkId].CellId))
                 {
@@ -169,7 +168,7 @@ namespace VissimSimulator
         /// <returns>CellTower</returns>
         public CellTower FindCellTowerByLinkId(string linkId)
         {
-            if (Links.ContainsKey(linkId))
+            if (!string.IsNullOrEmpty(linkId) && Links.ContainsKey(linkId))
             {
                 if (Cells.ContainsKey(Links[linkId].CellId))
                 {
