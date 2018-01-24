@@ -16,11 +16,12 @@ namespace VissimSimulator
         private const string VissimEventsFilePath = @"..\..\output\VehicleEvents.csv";
         private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang_2.inpx";
         private const char Delimiter = ',';
-        private const long SimulationTicks = 7200;
         private const int CellPhonePopulation = 10000;
         private const int PercentageOfOnCall = 40;
         private const int PercentageOfPowerOn = 80;
-        private const int DetectionInterval = 30; //detect the vehicle event for every # of seconds
+
+        public const long SimulationTicks = 7200;
+        public const int DetectionInterval = 30; //detect the vehicle event for every # of seconds
         
         //task cancellation source
         private CancellationTokenSource tokenSource;
