@@ -20,6 +20,7 @@ namespace VissimSimulator
         private const int CellPhonePopulation = 10000;
         private const int PercentageOfOnCall = 40;
         private const int PercentageOfPowerOn = 80;
+        private const int DetectionInterval = 30; //detect the vehicle event for every # of seconds
         
         //task cancellation source
         private CancellationTokenSource tokenSource;
@@ -146,7 +147,7 @@ namespace VissimSimulator
                     //}
 
                     //make the Vissim simulation move forward one tick
-                    for (int i = 0; i < 30; i++)
+                    for (int i = 0; i < DetectionInterval; i++)
                     {
                         vissim.Simulation.RunSingleStep();
                         Interlocked.Increment(ref currentTick);
