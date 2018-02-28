@@ -13,11 +13,15 @@ namespace VissimSimulator
     {
         #region private fields
         private const string CellLinkRelationFilePath = @".\input\Taicang_Major_Cell_Link_Related.csv";
-        private const string VissimEventsFilePath = @".\VehicleEvents.csv";
-        private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang.inpx";
+        private const string VissimEventsFilePath = @"..\..\output\VehicleEvents.csv";
+        private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang_2.inpx";
         private const char Delimiter = ',';
-        private const long SimulationTicks = 3600;
         private const int CellPhonePopulation = 10000;
+        private const int PercentageOfOnCall = 40;
+        private const int PercentageOfPowerOn = 80;
+
+        public const long SimulationTicks = 7200;
+        public const int DetectionInterval = 30; //detect the vehicle event for every # of seconds
         
         //task cancellation source
         private CancellationTokenSource tokenSource;
@@ -92,68 +96,77 @@ namespace VissimSimulator
             //}
 
             //warm up
-            for (int i = 0; i < 1800; i++)
+            try
             {
-                vissim.Simulation.RunSingleStep();
-            }
-
-            while (currentTick < SimulationTicks)
-            {
-                foreach (IVehicle vehicle in vissim.Net.Vehicles)
-                {
-                    //get the vehicle id+
-                    int vehicleId = (int)vehicle.AttValue["No"];
-                    //get the current vehicle link
-                    ILane lane = vehicle.Lane;
-                    string linkId = lane.AttValue["Link"];
-                    //Console.WriteLine(string.Format("vehicle {0} at link {1}", vehicleId, linkId));
-                    //first check if this vehicle has event
-                    if (vehicleEvents.ContainsKey(vehicleId.ToString()))
-                    {
-                        foreach (CellularTowerEvent cEvent in DetectEvent(vehicleId.ToString(), linkId, currentTick))
-                        {
-                            if (cEvent != null)
-                            {
-                                cellularTowerEvents.Add(cEvent);
-                            }
-                        }
-
-                    }
-                    else //if no vehicle event, that means this is new vehicle entering the vissim network
-                    {
-                        GenerateEvent(vehicleId.ToString(), currentTick);
-                    }
-                }
-
-                //we should also check all pre-defined vehicle events
-                //for (int i = 1; i < CellPhonePopulation; i++)
-                //{
-                //    int vehicleId = -1 * i;
-                //    if (vehicleEvents.ContainsKey(vehicleId.ToString()))
-                //    {
-                //        foreach (CellularTowerEvent cEvent in DetectEvent(vehicleId.ToString(), null, currentTick))
-                //        {
-                //            if (cEvent != null)
-                //            {
-                //                cellularTowerEvents.Add(cEvent);
-                //            }
-                //        }
-                //    }
-                //}
-
-                //make the Vissim simulation move forward one tick
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 1800; i++)
                 {
                     vissim.Simulation.RunSingleStep();
-                    Interlocked.Increment(ref currentTick);
+                }
+
+                while (currentTick < SimulationTicks)
+                {
+                    foreach (IVehicle vehicle in vissim.Net.Vehicles)
+                    {
+                        //get the vehicle id+
+                        int vehicleId = (int)vehicle.AttValue["No"];
+                        //get the current vehicle link
+                        ILane lane = vehicle.Lane;
+                        string linkId = lane.AttValue["Link"];
+                        //Console.WriteLine(string.Format("vehicle {0} at link {1}", vehicleId, linkId));
+                        //first check if this vehicle has event
+                        if (vehicleEvents.ContainsKey(vehicleId.ToString()))
+                        {
+                            foreach (CellularTowerEvent cEvent in DetectEvent(vehicleId.ToString(), linkId, currentTick))
+                            {
+                                if (cEvent != null)
+                                {
+                                    cellularTowerEvents.Add(cEvent);
+                                }
+                            }
+
+                        }
+                        else //if no vehicle event, that means this is new vehicle entering the vissim network
+                        {
+                            GenerateEvent(vehicleId.ToString(), currentTick);
+                        }
+                    }
+
+                    //we should also check all pre-defined vehicle events
+                    //for (int i = 1; i < CellPhonePopulation; i++)
+                    //{
+                    //    int vehicleId = -1 * i;
+                    //    if (vehicleEvents.ContainsKey(vehicleId.ToString()))
+                    //    {
+                    //        foreach (CellularTowerEvent cEvent in DetectEvent(vehicleId.ToString(), null, currentTick))
+                    //        {
+                    //            if (cEvent != null)
+                    //            {
+                    //                cellularTowerEvents.Add(cEvent);
+                    //            }
+                    //        }
+                    //    }
+                    //}
+
+                    //make the Vissim simulation move forward one tick
+                    for (int i = 0; i < DetectionInterval; i++)
+                    {
+                        vissim.Simulation.RunSingleStep();
+                        Interlocked.Increment(ref currentTick);
+                    }
                 }
             }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                //set the cancellation token to stop all tasks
+                tokenSource.Cancel();
 
-            //set the cancellation token to stop all tasks
-            tokenSource.Cancel();
-
-            //let the blockingqueue to know that we stopped adding new events so it will gracefully exit
-            cellularTowerEvents.CompleteAdding();
+                //let the blockingqueue to know that we stopped adding new events so it will gracefully exit
+                cellularTowerEvents.CompleteAdding();
+            }
         }
 
         /// <summary>
@@ -199,13 +212,29 @@ namespace VissimSimulator
                     preLocation = cellularNetwork.FindLocationByLinkId(vEvent.PreLinkId);
                     preCell = cellularNetwork.FindCellTowerByLinkId(vEvent.PreLinkId);
 
-                    if (curLocation != null && curCell != null && 
-                        preLocation != null && preCell != null &&
-                        !curCell.Equals(preCell))
+                    switch (evt.EventType)
                     {
-                        //for now just use vechileId to represnet IMSI
-                        yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation.LocationId, preCell.CellTowerId, evt, currentTick);
+                        case EventType.OnCall:
+                            //for any oncall events, just return the location
+                            if (curLocation != null && curCell != null)
+                            {
+                                yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation?.LocationId, preCell?.CellTowerId, evt, currentTick);
+                            }
+                            break;
+                        case EventType.PowerOn:
+                            if (curLocation != null && curCell != null &&
+                                preLocation != null && preCell != null &&
+                                !curCell.Equals(preCell))
+                            {
+                                //for now just use vechileId to represnet IMSI
+                                yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation.LocationId, preCell.CellTowerId, evt, currentTick);
+                            }
+                            break;
+                        default:
+                            break;
                     }
+
+
                 }
             }
             yield return null;
@@ -277,19 +306,19 @@ namespace VissimSimulator
         {
             Random rnd = new Random();
             //get a random number
-            int vehiclePossible = rnd.Next(0, 10);
+            int vehiclePossible = rnd.Next(0, 100);
 
             //let's say 80% of vehicles will have PowerOn event
-            if (vehiclePossible <= 8)
+            if (vehiclePossible <= PercentageOfPowerOn)
             {
                 //no vehicle event on this vehicle yet. Means this is a new vehicle in the vissim network
                 VehicleEvent vEvent = new VehicleEvent(vehicleId);
                 vEvent.AddPowerOnEvent();
 
-                int nextPossibleOnCall = rnd.Next(0, 10);
+                int nextPossibleOnCall = rnd.Next(0, 100);
 
-                //let's say 20% of vehicles will have OnCall event
-                if (nextPossibleOnCall < 2)
+                //let's say 40% of vehicles will have OnCall event
+                if (nextPossibleOnCall < PercentageOfOnCall)
                 {
                     vEvent.AddOnCallEvent(currentTick);
                 }

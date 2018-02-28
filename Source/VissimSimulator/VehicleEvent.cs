@@ -84,11 +84,12 @@ namespace VissimSimulator
         /// <param name="currentTick">Current time tick</param>
         public void AddOnCallEvent(long currentTick)
         {
+            long upperBoundTime = (EventSimulator.SimulationTicks / EventSimulator.DetectionInterval) + 1;
             Random rnd = new Random();
             //set the timespan range. start tick will always be current range to
-            long startTick = rnd.Next((int)currentTick + 60, 3600);
-            long endTick = startTick + rnd.Next(0, (3600 - (int)startTick));
-            Event evet = new Event(EventType.OnCall, new VS.TimeSpan(startTick, endTick));
+            long startTick = rnd.Next((int)currentTick / 30 + 1, Math.Min((int)upperBoundTime, (int)currentTick / 30 + 2));
+            long endTick = startTick + rnd.Next(60, Math.Max((int)(upperBoundTime - startTick), 120));
+            Event evet = new Event(EventType.OnCall, new VS.TimeSpan(startTick * 30, endTick * 30));
             events.Add(evet.guid, evet);
         }
 
