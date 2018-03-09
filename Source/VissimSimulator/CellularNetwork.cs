@@ -8,7 +8,10 @@ namespace VissimSimulator
     public class CellularNetwork
     {
         #region private fields
-        private Dictionary<string, Location> network;
+        private IDictionary<string, Location> network;
+        private IDictionary<string, Link> _links;
+        private IDictionary<string, CellTower> _cells;
+
         #endregion //private fields
 
         #region public methods
@@ -24,10 +27,14 @@ namespace VissimSimulator
         {
             get 
             {
-                return (from location in network.Values
-                        from cell in network[location.LocationId].Cells
-                        from link in cell.Links.Values
-                        select link).ToDictionary(x => x.LinkId);
+                if (_links == null)
+                {
+                    _links = (from location in network.Values
+                            from cell in network[location.LocationId].Cells
+                            from link in cell.Links.Values
+                            select link).ToDictionary(x => x.LinkId);
+                }
+                return _links;
             }
         }
 
@@ -35,9 +42,13 @@ namespace VissimSimulator
         {
             get
             {
-                return (from location in network.Values
-                        from cell in network[location.LocationId].Cells
-                        select cell).ToDictionary(x => x.CellTowerId);
+                if (_cells == null)
+                {
+                    _cells = (from location in network.Values
+                            from cell in network[location.LocationId].Cells
+                            select cell).ToDictionary(x => x.CellTowerId);
+                }
+                return _cells;
             }
         }
 

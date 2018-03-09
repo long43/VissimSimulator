@@ -195,6 +195,12 @@ namespace VissimSimulator
                 vEvent.CurLinkId = linkId;
             }
 
+            //early termination
+            if (vEvent.CurLinkId == vEvent.PreLinkId)
+            {
+                yield return null;
+            }
+
             //find out the active event on this vehicle
             foreach (Event evt in vEvent.GetActiveEvent(currentTick))
             {
