@@ -13,15 +13,15 @@ namespace VissimSimulator
     {
         #region private fields
         private const string CellLinkRelationFilePath = @".\input\Taicang_Major_Cell_Link_Related.csv";
-        private const string VissimEventsFilePath = @"..\..\output\VehicleEvents.csv";
+        private string VissimEventsFilePath = @"..\..\output\VehicleEvents_{0}.csv";
         private const string VissimSimulatorFilePath = @"C:\Users\Public\Documents\PTV Vision\PTV Vissim 6\Taicang_2.inpx";
         private const char Delimiter = ',';
         private const int CellPhonePopulation = 10000;
         private const int PercentageOfOnCall = 40;
         private const int PercentageOfPowerOn = 80;
 
-        public const long SimulationTicks = 7200;
-        public const int DetectionInterval = 30; //detect the vehicle event for every # of seconds
+        public const long SimulationTicks = 28800; //1 simulation second = 1 simulation ticks, 8 hours simulation
+        public const int DetectionInterval = 5; //detect the vehicle event for every # of simulation steps, 5 seconds
         
         //task cancellation source
         private CancellationTokenSource tokenSource;
@@ -52,6 +52,7 @@ namespace VissimSimulator
             cellularNetwork = new CellularNetwork();
             vehicleEvents = new Dictionary<string, VehicleEvent>();
             cellularTowerEvents = new BlockingCollection<CellularTowerEvent>();
+            VissimEventsFilePath = string.Format(this.VissimEventsFilePath, DateTime.Now.ToString("yyyyMMddHHmmssffff"));
         }
 
         public void Run()
@@ -123,7 +124,6 @@ namespace VissimSimulator
                                     cellularTowerEvents.Add(cEvent);
                                 }
                             }
-
                         }
                         else //if no vehicle event, that means this is new vehicle entering the vissim network
                         {
@@ -216,7 +216,7 @@ namespace VissimSimulator
                     {
                         case EventType.OnCall:
                             //for any oncall events, just return the location
-                            if (curLocation != null && curCell != null)
+                            if (curCell != null && preCell != null && !curCell.Equals(preCell))
                             {
                                 yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation?.LocationId, preCell?.CellTowerId, evt, currentTick);
                             }

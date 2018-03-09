@@ -55,6 +55,7 @@ namespace VissimSimulator
         /// <param name="delimiter">delimiter</param>
         public void LoadFromFile(string networkFilePath, char delimiter)
         {
+            HashSet<string> linkSet = new HashSet<string>();
             //read the cell-location relation file
             using (StreamReader cellLinkReader = new StreamReader(File.OpenRead(networkFilePath)))
             {
@@ -67,9 +68,19 @@ namespace VissimSimulator
                     string[] values = line.Split(delimiter);
 
                     string locationId = values[2];
-                    string cellId = values[1];
+                    string cellId = string.Format("{0}-{1}",locationId, values[1]);
                     string linkId = values[0];
                     Location location;
+
+                    if (!linkSet.Contains(linkId))
+                    {
+                        linkSet.Add(linkId);
+                    }
+                    else
+                    {
+                        Console.WriteLine("the link " + linkId + " is already exists");
+                        continue;     
+                    }
 
                     if (!this.ContainsLocation(locationId))
                     {
@@ -96,7 +107,7 @@ namespace VissimSimulator
                             //check if link exists, most likely it doesn't exist otherwise the file is corrupted
                             if (cell.Links.ContainsKey(linkId))
                             {
-                                throw new Exception("the link is already exists");
+                                throw new Exception(string.Format("the link id {0} already exists..", linkId));
                             }
 
                             cell.AddLink(linkId);
