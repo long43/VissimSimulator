@@ -230,7 +230,7 @@ namespace VissimSimulator
                         case EventType.PowerOn:
                             if (curLocation != null && curCell != null &&
                                 preLocation != null && preCell != null &&
-                                !curCell.Equals(preCell))
+                                !curLocation.Equals(preLocation))
                             {
                                 //for now just use vechileId to represnet IMSI
                                 yield return new CellularTowerEvent(vehicleId, curLocation.LocationId, curCell.CellTowerId, preLocation.LocationId, preCell.CellTowerId, evt, currentTick);
