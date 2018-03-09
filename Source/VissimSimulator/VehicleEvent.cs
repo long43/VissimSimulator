@@ -18,6 +18,14 @@ namespace VissimSimulator
 
         public string PreLinkId { get; set; }
 
+        public int EventCount
+        {
+            get
+            {
+                return events.Count();
+            }
+        }
+
         #endregion //public properties
 
         #region public methods
@@ -38,7 +46,6 @@ namespace VissimSimulator
             CurLinkId = curLinkId;
             PreLinkId = preLinkId;
         }
-
 
         /// <summary>
         /// Get an active event from this vehicle

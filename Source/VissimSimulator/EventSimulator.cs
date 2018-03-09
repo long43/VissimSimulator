@@ -184,6 +184,12 @@ namespace VissimSimulator
         {
             VehicleEvent vEvent = vehicleEvents[vehicleId];
 
+            //early termination
+            if (vEvent.EventCount == 0)
+            {
+                yield return null;
+            }
+
             //if the linkId is null, it means the vehicle event is pre-defined (non-vehicular event)
             if (string.IsNullOrEmpty(linkId))
             {
@@ -283,33 +289,12 @@ namespace VissimSimulator
             }
         }
 
-        private void GenerateEvent(string vehicleId, int currentTick, string linkId)
-        {
-            Random rnd = new Random();
-            //get a random number
-            int vehiclePossible = rnd.Next(0, 10);
-
-            //let's say 80% of vehicles will have PowerOn event
-            if (vehiclePossible <= 8)
-            {
-                //no vehicle event on this vehicle yet. Means this is a new vehicle in the vissim network
-                VehicleEvent vEvent = new VehicleEvent(vehicleId, linkId);
-                vEvent.AddPowerOnEvent();
-
-                int nextPossibleOnCall = rnd.Next(0, 10);
-
-                //let's say 20% of vehicles will have OnCall event
-                if (nextPossibleOnCall < 2)
-                {
-                    vEvent.AddOnCallEvent(currentTick);
-                }
-
-                vehicleEvents.Add(vEvent.VehicleId, vEvent);
-            }
-        }
-
         private void GenerateEvent(string vehicleId, int currentTick)
         {
+            //make sure every vehicle will have a vehicle event object
+            //but not necessarially has actual on-call or power-on event
+            VehicleEvent vEvent = new VehicleEvent(vehicleId);
+
             Random rnd = new Random();
             //get a random number
             int vehiclePossible = rnd.Next(0, 100);
@@ -318,7 +303,6 @@ namespace VissimSimulator
             if (vehiclePossible <= PercentageOfPowerOn)
             {
                 //no vehicle event on this vehicle yet. Means this is a new vehicle in the vissim network
-                VehicleEvent vEvent = new VehicleEvent(vehicleId);
                 vEvent.AddPowerOnEvent();
 
                 int nextPossibleOnCall = rnd.Next(0, 100);
@@ -328,9 +312,8 @@ namespace VissimSimulator
                 {
                     vEvent.AddOnCallEvent(currentTick);
                 }
-
-                vehicleEvents.Add(vEvent.VehicleId, vEvent);
             }
+            vehicleEvents.Add(vEvent.VehicleId, vEvent);
         }
         #endregion private methods
     }
