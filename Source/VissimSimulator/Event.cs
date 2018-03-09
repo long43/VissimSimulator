@@ -30,7 +30,7 @@ namespace VissimSimulator
 
             EventType = type;
 
-            TimeSpan = new VS.TimeSpan(0, 3600);
+            TimeSpan = new VS.TimeSpan(0, EventSimulator.SimulationTicks);
         }
 
         /// <summary>
